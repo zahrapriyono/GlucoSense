@@ -1,6 +1,3 @@
-# Preview isi predictor.py — kamu akan buat file ini manual di assessment/ml/
-
-predictor_code = '''
 import joblib
 import numpy as np
 import json
@@ -54,6 +51,3 @@ def predict_risk(form_data: dict) -> dict:
         'probability': round(float(proba) * 100, 1),
         'tier': tier,
     }
-'''
-
-print(predictor_code)
