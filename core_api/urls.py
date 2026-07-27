@@ -3,9 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Jalur untuk Artikel
-    path('articles/', views.get_articles, name='get_articles'),
-    
-    # Jalur untuk Rekomendasi Dokter
-    path('doctors/', views.get_doctors, name='get_doctors'),
+    path('articles/', views.get_article_list, name='get_article_list'),
+    path('doctors/', views.get_doctor_list, name='get_doctor_list'),
+    path('glucose-logs/', views.glucose_log_api, name='glucose_log_api'),
 ]

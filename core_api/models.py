@@ -9,6 +9,7 @@ class Article(models.Model):
     title = models.CharField(max_length=255, db_column='title')
     content = models.TextField(db_column='content')
     category = models.CharField(max_length=50, db_column='category') # Contoh: 'Type 1', 'Type 2', 'Gestational'
+    thumbnailUrl = models.URLField(max_length=500, blank=True, null=True)
     createdAt = models.DateTimeField(auto_now_add=True, db_column='createdAt')
 
     class Meta:
@@ -24,6 +25,7 @@ class Doctor(models.Model):
     city = models.CharField(max_length=100, db_column='city')
     experienceYears = models.IntegerField(db_column='experienceYears')
     description = models.TextField(db_column='description', blank=True, null=True)
+    profilePictureUrl = models.URLField(max_length=500, blank=True, null=True)
     createdAt = models.DateTimeField(auto_now_add=True, db_column='createdAt')
 
     class Meta:
