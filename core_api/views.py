@@ -398,3 +398,117 @@ def food_log_api(request):
 # ============================
 # MEDICAL PROFILE API
 # ============================
+
+def get_medical_profile(request):
+    """
+    Get a medical profile.
+
+    Temporary implementation:
+    Currently uses `profile_id` from the query parameter because
+    authentication has not been implemented yet.
+
+    TODO:
+    Replace `profile_id` with the authenticated user's medical profile
+    after JWT/session authentication is implemented.
+    """
+
+    profile_id = request.GET.get("profile_id")
+
+    if not profile_id:
+        return error_response(
+            "Profile ID is required.",
+            400
+        )
+
+    try:
+        medical_profile = MedicalProfile.objects.get(id=profile_id)
+    except MedicalProfile.DoesNotExist:
+        return error_response(
+            "Medical profile not found.",
+            404
+        )
+
+    return JsonResponse({
+        "id": medical_profile.id,
+        "user_id": medical_profile.user_id,
+        "full_name": medical_profile.fullName,
+        "diabetes_type": medical_profile.diabetesType,
+        "target_sugar_low": medical_profile.targetSugarLow,
+        "target_sugar_high": medical_profile.targetSugarHigh,
+        "birth_date": medical_profile.birthDate,
+        "weight_kg": medical_profile.weightKg,
+    })
+
+def update_medical_profile(request):
+    """
+    Update a medical profile.
+
+    Temporary implementation:
+    Currently updates a medical profile using the provided profile ID.
+
+    TODO:
+    Replace the profile ID with the authenticated user's medical profile
+    after authentication is implemented.
+    """
+
+    body, error = parse_json_body(request)
+
+    if error:
+        return error
+
+    profile_id = body.get("id")
+    full_name = body.get("full_name")
+    diabetes_type = body.get("diabetes_type")
+    target_sugar_low = body.get("target_sugar_low")
+    target_sugar_high = body.get("target_sugar_high")
+    birth_date = body.get("birth_date")
+    weight_kg = body.get("weight_kg")
+
+    if not all([
+        profile_id,
+        full_name,
+        diabetes_type,
+        target_sugar_low,
+        target_sugar_high,
+        birth_date,
+        weight_kg,
+    ]):
+        return error_response(
+            "All fields are required.",
+            400
+        )
+
+    try:
+        medical_profile = MedicalProfile.objects.get(id=profile_id)
+    except MedicalProfile.DoesNotExist:
+        return error_response(
+            "Medical profile not found.",
+            404
+        )
+
+    medical_profile.fullName = full_name
+    medical_profile.diabetesType = diabetes_type
+    medical_profile.targetSugarLow = target_sugar_low
+    medical_profile.targetSugarHigh = target_sugar_high
+    medical_profile.birthDate = birth_date
+    medical_profile.weightKg = weight_kg
+
+    medical_profile.save()
+
+    return success_response(
+        "Medical profile updated successfully."
+    )
+        
+@csrf_exempt
+def medical_profile_api(request):
+
+    if request.method == "GET":
+        return get_medical_profile(request)
+
+    elif request.method == "PUT":
+        return update_medical_profile(request)
+
+    return error_response(
+        "Method not allowed.",
+        405
+    )
