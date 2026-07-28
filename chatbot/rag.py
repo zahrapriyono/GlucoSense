@@ -1,16 +1,15 @@
 """
-GlucoSense RAG (Retrieval-Augmented Generation) Pipeline
+GlucoSense RAG (Retrieval-Augmented Generation) Pipeline - Groq Version
 
 Pipeline:
 1. User kirim pertanyaan (Indonesia/Inggris)
 2. Pertanyaan di-embed pakai model multilingual
 3. Cari dokumen paling relevan dari ChromaDB
-4. Kirim konteks + pertanyaan ke LLM
+4. Kirim konteks + pertanyaan ke LLM (Groq - LLaMA 3)
 5. LLM jawab berdasarkan konteks saja
 """
 
 import os
-import json
 import logging
 from pathlib import Path
 
@@ -49,13 +48,6 @@ def _init():
 def retrieve(query: str, top_k: int = _TOP_K) -> list[dict]:
     """
     Retrieve dokumen paling relevan dari knowledge base.
-    
-    Args:
-        query: Pertanyaan user
-        top_k: Jumlah dokumen yang diambil
-    
-    Returns:
-        List of dict dengan keys: 'text', 'metadata', 'distance'
     """
     _init()
     
@@ -81,8 +73,6 @@ def retrieve(query: str, top_k: int = _TOP_K) -> list[dict]:
     # Log untuk debugging
     logger.info(f"Query: {query[:80]}...")
     logger.info(f"Retrieved {len(documents)} documents")
-    for i, doc in enumerate(documents):
-        logger.info(f"  [{i}] distance={doc['distance']:.4f} | {doc['text'][:60]}...")
     
     return documents
 
@@ -90,9 +80,6 @@ def retrieve(query: str, top_k: int = _TOP_K) -> list[dict]:
 def build_prompt(query: str, retrieved_docs: list[dict]) -> tuple[str, str]:
     """
     Bangun system prompt dan user prompt untuk LLM.
-    
-    Returns:
-        (system_prompt, user_prompt)
     """
     # System prompt — ini yang mengontrol perilaku chatbot
     system_prompt = """You are GlucoSense AI, a diabetes health information assistant.
@@ -112,9 +99,9 @@ IMPORTANT: You are NOT a doctor. You provide general health information only."""
     context_parts = []
     for i, doc in enumerate(retrieved_docs):
         source = doc['metadata'].get('source', 'Unknown')
-        context_parts.append(f"[Source {i+1}: {source}]\\n{doc['text']}")
+        context_parts.append(f"[Source {i+1}: {source}]\n{doc['text']}")
     
-    context = "\\n\\n---\\n\\n".join(context_parts)
+    context = "\n\n---\n\n".join(context_parts)
     
     user_prompt = f"""CONTEXT:
 {context}
@@ -130,33 +117,40 @@ Please answer the question based ONLY on the context above."""
 
 def call_llm(system_prompt: str, user_prompt: str) -> str:
     """
-    Panggil LLM untuk generate jawaban.
-    
-    Ganti implementasi ini sesuai provider API yang kamu pakai.
-    Contoh ini pakai Google Gemini.
+    Panggil LLM untuk generate jawaban menggunakan GROQ API (LLaMA 3).
     """
     try:
-        import google.generativeai as genai
+        from groq import Groq
         from dotenv import load_dotenv
         
         load_dotenv()
-        api_key = os.getenv('GEMINI_API_KEY')
+        api_key = os.getenv('GROQ_API_KEY')
         
         if not api_key:
-            return "Error: API key not configured. Please set GEMINI_API_KEY in .env file."
+            return "Error: API key not configured. Please set GROQ_API_KEY in .env file."
         
-        genai.configure(api_key=api_key)
+        client = Groq(api_key=api_key)
         
-        model = genai.GenerativeModel(
-            model_name='gemini-2.0-flash',  # atau model lain yang tersedia
-            system_instruction=system_prompt
+        # Menggunakan model LLaMA 3 dari Groq
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                }
+            ],
+            model="llama-3.3-70b-versatile", 
+            temperature=0.2, # Dibuat rendah (0.2) agar lebih faktual sesuai konteks RAG
         )
         
-        response = model.generate_content(user_prompt)
-        return response.text
+        return chat_completion.choices[0].message.content
         
     except ImportError:
-        return "Error: google-generativeai package not installed. Run: pip install google-generativeai"
+        return "Error: groq package not installed. Run in terminal: pip install groq"
     except Exception as e:
         logger.error(f"LLM call failed: {e}")
         return f"Sorry, I encountered an error while processing your question. Please try again later."
@@ -165,16 +159,6 @@ def call_llm(system_prompt: str, user_prompt: str) -> str:
 def get_response(user_message: str) -> dict:
     """
     Main function — terima pertanyaan user, return jawaban.
-    
-    Args:
-        user_message: Pertanyaan dari user
-    
-    Returns:
-        dict: {
-            'answer': str,           # Jawaban chatbot
-            'sources': list[dict],   # Sumber yang dipakai
-            'query': str             # Pertanyaan asli
-        }
     """
     # 1. Retrieve dokumen relevan
     retrieved_docs = retrieve(user_message)
