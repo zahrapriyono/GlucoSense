@@ -1,7 +1,11 @@
-import json
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
+from .utils import (
+    parse_json_body,
+    success_response,
+    error_response,
+)
 
 from .models import (
     Article,
@@ -10,41 +14,6 @@ from .models import (
     BloodGlucoseLog,
     FoodLog,
 )
-
-
-def parse_json_body(request):
-    try:
-        return json.loads(request.body), None
-    except json.JSONDecodeError:
-        return None, JsonResponse(
-            {
-                "error": "Invalid JSON format"
-            },
-            status=400
-        )
-
-
-def error_response(message, status):
-    return JsonResponse(
-        {
-            "error": message
-        },
-        status=status
-    )
-
-
-def success_response(message, status=200, **kwargs):
-    response = {
-        "message": message
-    }
-
-    response.update(kwargs)
-
-    return JsonResponse(
-        response,
-        status=status
-    )
-
 
 # ==============================
 # ARTICLE API
@@ -75,12 +44,6 @@ def get_article_list(request):
 # ========================
 
 def get_doctor_list(request):
-    """
-    Mengambil daftar dokter spesialis dengan fitur pencarian/filter
-    berdasarkan kota dan minimal pengalaman kerja.
-    """
-    # Mengambil parameter filter dari URL (jika ada)
-    # Contoh: /api/doctors/?city=jakarta&experience=5
     city_filter = request.GET.get('city', None)
     experience_filter = request.GET.get('experience', None)
     
@@ -255,12 +218,16 @@ def glucose_log_api(request):
 
     if request.method == 'GET':
         return get_glucose_logs(request)
+    
     elif request.method == "POST":
         return create_glucose_logs(request)
+    
     elif request.method == "PUT":
         return update_glucose_logs(request)
+    
     elif request.method == "DELETE":
         return delete_glucose_log(request)
+    
     return error_response(
         "Method not allowed.",
         405
@@ -269,6 +236,164 @@ def glucose_log_api(request):
 # ===========================
 # FOOD LOG API
 # ===========================
+
+def get_food_logs(request):
+    profile_id = request.GET.get("profile_id", None)
+
+    logs = FoodLog.objects.all()
+
+    if profile_id:
+        logs = logs.filter(
+            medicalProfile_id = profile_id
+        )
+
+    logs = logs.order_by("loggedAt")
+
+    data = [
+        {
+            "id": log.id,
+            "medical_profile_id": log.medicalProfile_id,
+            "food_name": log.foodName,
+            "estimated_carbs": log.estimatedCarbs,
+            "logged_at": log.loggedAt.strftime("%Y-%m-%d %H:%M:%S"),
+        }
+
+        for log in logs
+    ]
+
+    return JsonResponse(data, safe=False)
+
+
+def create_food_log(request):
+    body ,error = parse_json_body(request)
+
+    if error:
+        return error
+
+    medical_profile_id = body.get("medical_profile_id")
+    food_name = body.get("food_name")
+    estimated_carbs = body.get("estimated_carbs")
+    logged_at = body.get("logged_at")
+
+    if not all([
+        medical_profile_id,
+        food_name,
+        estimated_carbs,
+        logged_at
+    ]):
+        return error_response(
+            "All fields are required.",
+            400
+        )
+
+    try:
+        medical_profile = MedicalProfile.objects.get(id=medical_profile_id)
+    except MedicalProfile.DoesNotExist:
+        return error_response(
+            "Medical profile not found.",
+            404
+        )
+
+    food_log = FoodLog.objects.create(
+        medicalProfile=medical_profile,
+        foodName=food_name,
+        estimatedCarbs=estimated_carbs,
+        loggedAt=logged_at,
+    )
+
+    return success_response(
+        "Food log created successfully.",
+        status=201,
+        id=food_log.id,
+    )
+
+def update_food_log(request):
+    body, error = parse_json_body(request)
+
+    if error:
+        return error
+
+    log_id = body.get("id")
+    food_name = body.get("food_name")
+    estimated_carbs = body.get("estimated_carbs")
+    logged_at = body.get("logged_at")
+
+    if not all([
+        log_id,
+        food_name,
+        estimated_carbs,
+        logged_at,
+    ]):
+        return error_response(
+            "All fields are required.",
+            400
+        )
+
+    try:
+        food_log = FoodLog.objects.get(id=log_id)
+    except FoodLog.DoesNotExist:
+        return error_response(
+            "Food log not found.",
+            404
+        )
+
+    food_log.foodName = food_name
+    food_log.estimatedCarbs = estimated_carbs
+    food_log.loggedAt = logged_at
+
+    food_log.save()
+
+    return success_response(
+        "Food log updated successfully."
+    )
+    
+def delete_food_log(request):
+    body, error = parse_json_body(request)
+
+    if error:
+        return error
+
+    log_id = body.get("id")
+
+    if not log_id:
+        return error_response(
+            "Food log id is required.",
+            400
+        )
+
+    try:
+        food_log = FoodLog.objects.get(id=log_id)
+    except FoodLog.DoesNotExist:
+        return error_response(
+            "Food log not found.",
+            404
+        )
+
+    food_log.delete()
+
+    return success_response(
+        "Food log deleted successfully."
+    )
+
+@csrf_exempt
+def food_log_api(request):
+
+    if request.method == "GET":
+        return get_food_logs(request)
+    
+    elif request.method == "POST":
+        return create_food_log(request)
+    
+    elif request.method == "PUT":
+        return update_food_log(request)
+    
+    elif request.method == "DELETE":
+        return delete_food_log(request)
+    
+    return error_response(
+        "Method not allowed",
+        405
+    )
 
 # ============================
 # MEDICAL PROFILE API
