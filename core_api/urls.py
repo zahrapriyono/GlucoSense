@@ -9,4 +9,5 @@ urlpatterns = [
     path('food-logs/', views.food_log_api, name='food_log_api'),
     path('medical-profile/', views.medical_profile_api, name='medical_profile_api'),
     path('favorite-doctors/', views.favorite_doctor_api, name='favorite_doctor_api'),
+    path('chat-history/', views.chat_history_api, name='chat_history_api'),
 ]

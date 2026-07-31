@@ -695,3 +695,115 @@ def favorite_doctor_api(request):
         "Method not allowed.",
         405
     )
+
+
+# ============================
+# CHAT HISTORY API
+# ============================
+
+def get_chat_history(request):
+    """
+    Get chat history for a medical profile.
+
+    Temporary implementation:
+    Currently retrieves chat history using the provided
+    profile_id from the query parameter.
+
+    TODO:
+    Replace profile_id with the authenticated user's
+    medical profile after authentication is implemented.
+    """
+
+    profile_id = request.GET.get("profile_id")
+
+    if not profile_id:
+        return error_response(
+            "Profile ID is required.",
+            400
+        )
+
+    try:
+        MedicalProfile.objects.get(id=profile_id)
+    except MedicalProfile.DoesNotExist:
+        return error_response(
+            "Medical profile not found.",
+            404
+        )
+
+    chat_histories = ChatHistory.objects.filter(medicalProfile_id=profile_id).order_by("createdAt")
+
+    data = []
+
+    for chat in chat_histories:
+        data.append({
+            "id": chat.id,
+            "medical_profile_id": chat.medicalProfile_id,
+            "user_message": chat.userMessage,
+            "ai_response": chat.aiResponse,
+            "created_at": chat.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
+        })
+
+    return JsonResponse(data, safe=False)
+
+def save_chat_history(request):
+    """
+    Save a new chat history.
+
+    Temporary implementation:
+    Currently uses medical_profile_id from the request body.
+
+    TODO:
+    Replace medical_profile_id with the authenticated user's
+    medical profile after authentication is implemented.
+    """
+
+    body, error = parse_json_body(request)
+
+    if error:
+        return error
+
+    medical_profile_id = body.get("medical_profile_id")
+    user_message = body.get("user_message")
+    ai_response = body.get("ai_response")
+
+    if not all([
+        medical_profile_id,
+        user_message,
+        ai_response,
+    ]):
+        return error_response(
+            "All fields are required.",
+            400
+        )
+
+    try:
+        medical_profile = MedicalProfile.objects.get(id=medical_profile_id)
+    except MedicalProfile.DoesNotExist:
+        return error_response(
+            "Medical profile not found.",
+            404
+        )
+
+    ChatHistory.objects.create(
+        medicalProfile=medical_profile,
+        userMessage=user_message,
+        aiResponse=ai_response,
+    )
+
+    return success_response(
+        "Chat history saved successfully."
+    )
+
+@csrf_exempt
+def chat_history_api(request):
+
+    if request.method == "GET":
+        return get_chat_history(request)
+
+    elif request.method == "POST":
+        return save_chat_history(request)
+
+    return error_response(
+        "Method not allowed.",
+        405
+    )
