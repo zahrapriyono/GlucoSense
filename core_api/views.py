@@ -13,6 +13,8 @@ from .models import (
     MedicalProfile,
     BloodGlucoseLog,
     FoodLog,
+    FavoriteDoctor,
+    ChatHistory,
 )
 
 # ==============================
@@ -507,6 +509,187 @@ def medical_profile_api(request):
 
     elif request.method == "PUT":
         return update_medical_profile(request)
+
+    return error_response(
+        "Method not allowed.",
+        405
+    )
+
+
+# ============================
+# FAVORITE DOCTOR API
+# ============================
+
+def get_favorite_doctor(request):
+    """
+    Get a user's favorite doctors.
+
+    Temporary implementation:
+    Currently retrieves favorite doctors using the provided
+    profile_id from the query parameter.
+
+    TODO:
+    Replace profile_id with the authenticated user's
+    medical profile after authentication is implemented.
+    """
+
+    profile_id = request.GET.get("profile_id")
+
+    if not profile_id:
+        return error_response(
+            "Profile ID is required.",
+            400
+        )
+
+    try:
+        MedicalProfile.objects.get(id=profile_id)
+    except MedicalProfile.DoesNotExist:
+        return error_response(
+            "Medical profile not found.",
+            404
+        )
+
+    favorite_doctors = FavoriteDoctor.objects.filter(medicalProfile_id=profile_id).select_related("doctor")
+
+    data = []
+
+    for favorite in favorite_doctors:
+
+        doctor = favorite.doctor
+
+        data.append({
+            "id": favorite.id,
+            "doctor_id": doctor.id,
+            "full_name": doctor.fullName,
+            "specialization": doctor.specialization,
+            "city": doctor.city,
+            "experience_years": doctor.experienceYears,
+            "profile_picture_url": doctor.profilePictureUrl,
+            "created_at": favorite.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
+        })
+
+    return JsonResponse(data, safe=False)
+
+def add_favorite_doctor(request):
+    """
+    Add a doctor to the user's favorite list.
+
+    Temporary implementation:
+    Currently uses medical_profile_id from the request body.
+
+    TODO:
+    Replace medical_profile_id with the authenticated user's
+    medical profile after authentication is implemented.
+    """
+
+    body, error = parse_json_body(request)
+
+    if error:
+        return error
+
+    medical_profile_id = body.get("medical_profile_id")
+    doctor_id = body.get("doctor_id")
+
+    if not all([
+        medical_profile_id,
+        doctor_id,
+    ]):
+        return error_response(
+            "All fields are required.",
+            400
+        )
+
+    try:
+        medical_profile = MedicalProfile.objects.get(id=medical_profile_id)
+    except MedicalProfile.DoesNotExist:
+        return error_response(
+            "Medical profile not found",
+            404
+        )
+
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return error_response(
+            "Doctor not found.",
+            404
+        )
+
+    if FavoriteDoctor.objects.filter(
+        medicalProfile = medical_profile,
+        doctor = doctor
+    ).exists():
+        return error_response(
+            "Doctor is already in favorites.",
+            409
+        )
+
+    FavoriteDoctor.objects.create(
+        medicalProfile=medical_profile,
+        doctor=doctor,
+    )
+
+    return success_response(
+        "Doctor added to favorites successfully."
+    )
+
+def delete_favorite_doctor(request):
+    """
+    Remove a doctor from the user's favorite list.
+
+    Temporary implementation:
+    Currently uses medical_profile_id from the request body.
+
+    TODO:
+    Replace medical_profile_id with the authenticated user's
+    medical profile after authentication is implemented.
+    """
+
+    body, error = parse_json_body(request)
+
+    if error:
+        return error
+
+    medical_profile_id = body.get("medical_profile_id")
+    doctor_id = body.get("doctor_id")
+
+    if not all([
+        medical_profile_id,
+        doctor_id,
+    ]):
+        return error_response(
+            "All fields are required.",
+            400
+        )
+
+    try:
+        favorite_doctor = FavoriteDoctor.objects.get(
+            medicalProfile_id = medical_profile_id,
+            doctor_id = doctor_id
+        )
+    except FavoriteDoctor.DoesNotExist:
+        return error_response(
+            "Favorite doctor not found.",
+            404
+        )
+
+    favorite_doctor.delete()
+
+    return success_response(
+        "Doctor removed from favorites successfully."
+    )
+
+@csrf_exempt
+def favorite_doctor_api(request):
+
+    if request.method == "GET":
+        return get_favorite_doctor(request)
+    
+    elif request.method == "POST":
+        return add_favorite_doctor(request)
+    
+    elif request.method == "DELETE":
+        return delete_favorite_doctor(request)
 
     return error_response(
         "Method not allowed.",
