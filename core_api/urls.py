@@ -10,4 +10,6 @@ urlpatterns = [
     path('medical-profile/', views.medical_profile_api, name='medical_profile_api'),
     path('favorite-doctors/', views.favorite_doctor_api, name='favorite_doctor_api'),
     path('chat-history/', views.chat_history_api, name='chat_history_api'),
+    path('register/', views.register_api, name='register_api'),
+    path('login/', views.login_api, name='login_api'),
 ]

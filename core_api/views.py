@@ -1,10 +1,15 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate
 
+from .auth import generate_token
 from .utils import (
     parse_json_body,
     success_response,
     error_response,
+    validate_required_fields,
+    get_medical_profile,
 )
 
 from .models import (
@@ -82,55 +87,64 @@ def get_doctor_list(request):
 # =========================
 
 def get_glucose_logs(request):
-    profile_id = request.GET.get('profile_id', None)
-    logs = BloodGlucoseLog.objects.all()
 
-    if profile_id:
-        logs = logs.filter(medicalProfile_id = profile_id)
-        
-    logs = logs.order_by('loggedAt')
-    data = [
-        {
+    medical_profile = get_medical_profile(request.user)
+
+    if medical_profile is None:
+        return error_response(
+            "Medical profile not found.",
+            status=404
+        )
+
+    logs = BloodGlucoseLog.objects.filter(
+        medicalProfile=medical_profile
+    ).order_by("loggedAt")
+   
+    data = []
+
+    for log in logs:
+        data.append({
             'id': log.id,
             'medical_profile_id': log.medicalProfile_id,
             'sugar_level': log.sugarLevel,
             'log_context': log.logContext,
             'logged_at': log.loggedAt.strftime('%Y-%m-%d %H:%M:%S'),
-        }
-
-        for log in logs
-    ]
+        })
 
     return JsonResponse(data, safe=False)
 
-def create_glucose_logs(request):
-    body, error = parse_json_body(request)
+def create_glucose_log(request):
+    body = parse_json_body(request)
 
-    if error:
-        return error
+    if isinstance(body, JsonResponse):
+        return body
 
-    medical_profile_id = body.get("medical_profile_id")
+    required_fields = [
+        "sugar_level",
+        "log_context",
+        "logged_at",
+    ]
+
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
+
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
     sugar_level = body.get("sugar_level")
     log_context = body.get("log_context")
     logged_at = body.get("logged_at")
 
-    if not all([
-        medical_profile_id,
-        sugar_level,
-        log_context,
-        logged_at,
-    ]):
-        return error_response(
-            "All fields are required.",
-            400
-        )
+    medical_profile = get_medical_profile(request.user)
 
-    try:
-        medical_profile = MedicalProfile.objects.get(id=medical_profile_id)
-    except MedicalProfile.DoesNotExist:
+    if medical_profile is None:
         return error_response(
             "Medical profile not found.",
-            404
+            status=404
         )
 
     glucose_log = BloodGlucoseLog.objects.create(
@@ -145,34 +159,51 @@ def create_glucose_logs(request):
         id=glucose_log.id
     )
 
-def update_glucose_logs(request):
-    body, error = parse_json_body(request)
+def update_glucose_log(request):
+    body = parse_json_body(request)
 
-    if error:
-        return error
+    if isinstance(body, JsonResponse):
+        return body
 
-    log_id = body.get("id")
+    required_fields = [
+        "log_id",
+        "sugar_level",
+        "log_context",
+        "logged_at",
+    ]
+
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
+
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
+    log_id = body.get("log_id")
     sugar_level = body.get("sugar_level")
     log_context = body.get("log_context")
     logged_at = body.get("logged_at")
 
-    if not all([
-        log_id,
-        sugar_level,
-        log_context,
-        logged_at,
-    ]):
+    medical_profile = get_medical_profile(request.user)
+
+    if medical_profile is None:
         return error_response(
-            "All fields are required.",
-            400
+            "Medical profile not found.",
+            status=404
         )
 
     try:
-        glucose_log = BloodGlucoseLog.objects.get(id=log_id)
+        glucose_log = BloodGlucoseLog.objects.get(
+            id=log_id,
+            medicalProfile=medical_profile,
+        )
     except BloodGlucoseLog.DoesNotExist:
         return error_response(
             "Blood glucose log not found.",
-            404
+            status=404
         )
 
     glucose_log.sugarLevel = sugar_level
@@ -182,37 +213,56 @@ def update_glucose_logs(request):
     glucose_log.save()
 
     return success_response(
-        "Blood glucose log updeted successfully.",
+        "Blood glucose log updated successfully.",
         200
     )
 
 def delete_glucose_log(request):
-    body, error = parse_json_body(request)
+    body = parse_json_body(request)
 
-    if error:
-        return error
+    if isinstance(body, JsonResponse):
+        return body
 
-    log_id = body.get("id")
+    required_fields = [
+        "log_id",
+    ]
 
-    if not log_id:
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
+
+    if missing_fields:
         return error_response(
-            "Blood glucose log id is required.",
-            400
+            f"Missing required fields: {', '.join(missing_fields)}"
         )
 
+    log_id = body.get("log_id")
+
+    medical_profile = get_medical_profile(request.user)
+
+    if medical_profile is None:
+        return error_response(
+            "Medical profile not found.",
+            status=404
+        )
+    
     try:
-        glucose_log = BloodGlucoseLog.objects.get(id=log_id)
+        glucose_log = BloodGlucoseLog.objects.get(
+            id=log_id,
+            medicalProfile=medical_profile,
+        )
     except BloodGlucoseLog.DoesNotExist:
         return error_response(
             "Blood glucose log not found.",
-            404
+            status=404
         )
 
     glucose_log.delete()
 
     return success_response(
         "Blood glucose log deleted successfully.",
-        200
+        status=200
     )
 
 @csrf_exempt
@@ -222,17 +272,17 @@ def glucose_log_api(request):
         return get_glucose_logs(request)
     
     elif request.method == "POST":
-        return create_glucose_logs(request)
+        return create_glucose_log(request)
     
     elif request.method == "PUT":
-        return update_glucose_logs(request)
+        return update_glucose_log(request)
     
     elif request.method == "DELETE":
         return delete_glucose_log(request)
     
     return error_response(
         "Method not allowed.",
-        405
+        status=405
     )
 
 # ===========================
@@ -240,60 +290,66 @@ def glucose_log_api(request):
 # ===========================
 
 def get_food_logs(request):
-    profile_id = request.GET.get("profile_id", None)
 
-    logs = FoodLog.objects.all()
+    medical_profile = get_medical_profile(request.user)
 
-    if profile_id:
-        logs = logs.filter(
-            medicalProfile_id = profile_id
+    if medical_profile is None:
+        return error_response(
+            "Medical profile not found.",
+            status=404
         )
 
-    logs = logs.order_by("loggedAt")
+    logs = FoodLog.objects.filter(
+        medicalProfile=medical_profile
+    ).order_by("loggedAt")
 
-    data = [
-        {
-            "id": log.id,
-            "medical_profile_id": log.medicalProfile_id,
-            "food_name": log.foodName,
-            "estimated_carbs": log.estimatedCarbs,
-            "logged_at": log.loggedAt.strftime("%Y-%m-%d %H:%M:%S"),
-        }
+    data = []
 
-        for log in logs
-    ]
+    for log in logs:
+        data.append(
+            {
+                "id": log.id,
+                "food_name": log.foodName,
+                "estimated_carbs": log.estimatedCarbs,
+                "logged_at": log.loggedAt.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        )
 
     return JsonResponse(data, safe=False)
 
 
 def create_food_log(request):
-    body ,error = parse_json_body(request)
+    body = parse_json_body(request)
 
-    if error:
-        return error
+    if isinstance(body, JsonResponse):
+        return body
 
-    medical_profile_id = body.get("medical_profile_id")
+    required_fields = [
+        "food_name",
+        "estimated_carbs",
+        "logged_at",
+    ]
+
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
+
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
     food_name = body.get("food_name")
     estimated_carbs = body.get("estimated_carbs")
     logged_at = body.get("logged_at")
 
-    if not all([
-        medical_profile_id,
-        food_name,
-        estimated_carbs,
-        logged_at
-    ]):
-        return error_response(
-            "All fields are required.",
-            400
-        )
+    medical_profile = get_medical_profile(request.user)
 
-    try:
-        medical_profile = MedicalProfile.objects.get(id=medical_profile_id)
-    except MedicalProfile.DoesNotExist:
+    if medical_profile is None:
         return error_response(
             "Medical profile not found.",
-            404
+            status=404
         )
 
     food_log = FoodLog.objects.create(
@@ -310,33 +366,50 @@ def create_food_log(request):
     )
 
 def update_food_log(request):
-    body, error = parse_json_body(request)
+    body = parse_json_body(request)
 
-    if error:
-        return error
+    if isinstance(body, JsonResponse):
+        return body
 
-    log_id = body.get("id")
+    required_fields = [
+        "log_id",
+        "food_name",
+        "estimated_carbs",
+        "logged_at",
+    ]
+
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
+
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
+    log_id = body.get("log_id")
     food_name = body.get("food_name")
     estimated_carbs = body.get("estimated_carbs")
     logged_at = body.get("logged_at")
 
-    if not all([
-        log_id,
-        food_name,
-        estimated_carbs,
-        logged_at,
-    ]):
+    medical_profile = get_medical_profile(request.user)
+
+    if medical_profile is None:
         return error_response(
-            "All fields are required.",
-            400
+            "Medical profile not found.",
+            status=404
         )
 
     try:
-        food_log = FoodLog.objects.get(id=log_id)
+        food_log = FoodLog.objects.get(
+            id=log_id,
+            medicalProfile=medical_profile
+        )
     except FoodLog.DoesNotExist:
         return error_response(
             "Food log not found.",
-            404
+            status=404
         )
 
     food_log.foodName = food_name
@@ -346,35 +419,56 @@ def update_food_log(request):
     food_log.save()
 
     return success_response(
-        "Food log updated successfully."
+        "Food log updated successfully.",
+        status=200
     )
     
 def delete_food_log(request):
-    body, error = parse_json_body(request)
+    body = parse_json_body(request)
 
-    if error:
-        return error
+    if isinstance(body, JsonResponse):
+        return body
 
-    log_id = body.get("id")
+    required_fields = [
+        "log_id"
+    ]
 
-    if not log_id:
+    missing_fields = validate_required_fields(
+        body,
+        required_fields
+    )
+
+    if missing_fields:
         return error_response(
-            "Food log id is required.",
-            400
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
+    log_id = body.get("log_id")
+
+    medical_profile = get_medical_profile(request.user)
+
+    if medical_profile is None:
+        return error_response(
+            "Medical profile not found.",
+            status=404
         )
 
     try:
-        food_log = FoodLog.objects.get(id=log_id)
+        food_log = FoodLog.objects.get(
+            id=log_id,
+            medicalProfile=medical_profile
+        )
     except FoodLog.DoesNotExist:
         return error_response(
             "Food log not found.",
-            404
+            status=404
         )
 
     food_log.delete()
 
     return success_response(
-        "Food log deleted successfully."
+        "Food log deleted successfully.",
+        status=200
     )
 
 @csrf_exempt
@@ -394,40 +488,20 @@ def food_log_api(request):
     
     return error_response(
         "Method not allowed",
-        405
+        status=405
     )
 
 # ============================
 # MEDICAL PROFILE API
 # ============================
 
-def get_medical_profile(request):
-    """
-    Get a medical profile.
+def get_medical_profile_api(request):
+    medical_profile = get_medical_profile(request.user)
 
-    Temporary implementation:
-    Currently uses `profile_id` from the query parameter because
-    authentication has not been implemented yet.
-
-    TODO:
-    Replace `profile_id` with the authenticated user's medical profile
-    after JWT/session authentication is implemented.
-    """
-
-    profile_id = request.GET.get("profile_id")
-
-    if not profile_id:
-        return error_response(
-            "Profile ID is required.",
-            400
-        )
-
-    try:
-        medical_profile = MedicalProfile.objects.get(id=profile_id)
-    except MedicalProfile.DoesNotExist:
+    if medical_profile is None:
         return error_response(
             "Medical profile not found.",
-            404
+            status=404
         )
 
     return JsonResponse({
@@ -442,23 +516,30 @@ def get_medical_profile(request):
     })
 
 def update_medical_profile(request):
-    """
-    Update a medical profile.
+    body = parse_json_body(request)
 
-    Temporary implementation:
-    Currently updates a medical profile using the provided profile ID.
+    if isinstance(body, JsonResponse):
+        return body
 
-    TODO:
-    Replace the profile ID with the authenticated user's medical profile
-    after authentication is implemented.
-    """
+    required_fields = [
+        "full_name",
+        "diabetes_type",
+        "target_sugar_low",
+        "target_sugar_high",
+        "birth_date",
+        "weight_kg",
+    ]
 
-    body, error = parse_json_body(request)
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
 
-    if error:
-        return error
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
 
-    profile_id = body.get("id")
     full_name = body.get("full_name")
     diabetes_type = body.get("diabetes_type")
     target_sugar_low = body.get("target_sugar_low")
@@ -466,26 +547,12 @@ def update_medical_profile(request):
     birth_date = body.get("birth_date")
     weight_kg = body.get("weight_kg")
 
-    if not all([
-        profile_id,
-        full_name,
-        diabetes_type,
-        target_sugar_low,
-        target_sugar_high,
-        birth_date,
-        weight_kg,
-    ]):
-        return error_response(
-            "All fields are required.",
-            400
-        )
+    medical_profile = get_medical_profile(request.user)
 
-    try:
-        medical_profile = MedicalProfile.objects.get(id=profile_id)
-    except MedicalProfile.DoesNotExist:
+    if medical_profile is None:
         return error_response(
             "Medical profile not found.",
-            404
+            status=404
         )
 
     medical_profile.fullName = full_name
@@ -498,21 +565,22 @@ def update_medical_profile(request):
     medical_profile.save()
 
     return success_response(
-        "Medical profile updated successfully."
+        "Medical profile updated successfully.",
+        status=200
     )
         
 @csrf_exempt
 def medical_profile_api(request):
 
     if request.method == "GET":
-        return get_medical_profile(request)
+        return get_medical_profile_api(request)
 
     elif request.method == "PUT":
         return update_medical_profile(request)
 
     return error_response(
         "Method not allowed.",
-        405
+        status=405
     )
 
 
@@ -521,32 +589,13 @@ def medical_profile_api(request):
 # ============================
 
 def get_favorite_doctor(request):
-    """
-    Get a user's favorite doctors.
 
-    Temporary implementation:
-    Currently retrieves favorite doctors using the provided
-    profile_id from the query parameter.
+    medical_profile = get_medical_profile(request.user)
 
-    TODO:
-    Replace profile_id with the authenticated user's
-    medical profile after authentication is implemented.
-    """
-
-    profile_id = request.GET.get("profile_id")
-
-    if not profile_id:
-        return error_response(
-            "Profile ID is required.",
-            400
-        )
-
-    try:
-        MedicalProfile.objects.get(id=profile_id)
-    except MedicalProfile.DoesNotExist:
+    if medical_profile is None:
         return error_response(
             "Medical profile not found.",
-            404
+            status=404
         )
 
     favorite_doctors = FavoriteDoctor.objects.filter(medicalProfile_id=profile_id).select_related("doctor")
@@ -571,40 +620,33 @@ def get_favorite_doctor(request):
     return JsonResponse(data, safe=False)
 
 def add_favorite_doctor(request):
-    """
-    Add a doctor to the user's favorite list.
+    body = parse_json_body(request)
 
-    Temporary implementation:
-    Currently uses medical_profile_id from the request body.
+    if isinstance(body, JsonResponse):
+        return body
 
-    TODO:
-    Replace medical_profile_id with the authenticated user's
-    medical profile after authentication is implemented.
-    """
+    required_fields = [
+        "doctor_id",
+    ]
 
-    body, error = parse_json_body(request)
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
 
-    if error:
-        return error
-
-    medical_profile_id = body.get("medical_profile_id")
-    doctor_id = body.get("doctor_id")
-
-    if not all([
-        medical_profile_id,
-        doctor_id,
-    ]):
+    if missing_fields:
         return error_response(
-            "All fields are required.",
-            400
+            f"Missing required fields: {', '.join(missing_fields)}"
         )
 
-    try:
-        medical_profile = MedicalProfile.objects.get(id=medical_profile_id)
-    except MedicalProfile.DoesNotExist:
+    doctor_id = body.get("doctor_id")
+
+    medical_profile = get_medical_profile(request.user)
+
+    if medical_profile is None:
         return error_response(
-            "Medical profile not found",
-            404
+            "Medical profile not found.",
+            status=404
         )
 
     try:
@@ -612,7 +654,7 @@ def add_favorite_doctor(request):
     except Doctor.DoesNotExist:
         return error_response(
             "Doctor not found.",
-            404
+            status=404
         )
 
     if FavoriteDoctor.objects.filter(
@@ -621,7 +663,7 @@ def add_favorite_doctor(request):
     ).exists():
         return error_response(
             "Doctor is already in favorites.",
-            409
+            status=409
         )
 
     FavoriteDoctor.objects.create(
@@ -630,53 +672,57 @@ def add_favorite_doctor(request):
     )
 
     return success_response(
-        "Doctor added to favorites successfully."
+        "Doctor added to favorites successfully.",
+        status=201
     )
 
 def delete_favorite_doctor(request):
-    """
-    Remove a doctor from the user's favorite list.
 
-    Temporary implementation:
-    Currently uses medical_profile_id from the request body.
+    body = parse_json_body(request)
 
-    TODO:
-    Replace medical_profile_id with the authenticated user's
-    medical profile after authentication is implemented.
-    """
+    if isinstance(body, JsonResponse):
+        return body
 
-    body, error = parse_json_body(request)
+    required_fields = [
+        "doctor_id"
+    ]
 
-    if error:
-        return error
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
 
-    medical_profile_id = body.get("medical_profile_id")
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
     doctor_id = body.get("doctor_id")
 
-    if not all([
-        medical_profile_id,
-        doctor_id,
-    ]):
+    medical_profile = get_medical_profile(request.user)
+
+    if medical_profile is None:
         return error_response(
-            "All fields are required.",
-            400
+            "Medical profile not found.",
+            status=404
         )
 
     try:
         favorite_doctor = FavoriteDoctor.objects.get(
-            medicalProfile_id = medical_profile_id,
+            medicalProfile_id = medical_profile,
             doctor_id = doctor_id
         )
     except FavoriteDoctor.DoesNotExist:
         return error_response(
             "Favorite doctor not found.",
-            404
+            status=404
         )
 
     favorite_doctor.delete()
 
     return success_response(
-        "Doctor removed from favorites successfully."
+        "Doctor removed from favorites successfully.",
+        status=200
     )
 
 @csrf_exempt
@@ -693,7 +739,7 @@ def favorite_doctor_api(request):
 
     return error_response(
         "Method not allowed.",
-        405
+        status=405
     )
 
 
@@ -702,42 +748,24 @@ def favorite_doctor_api(request):
 # ============================
 
 def get_chat_history(request):
-    """
-    Get chat history for a medical profile.
 
-    Temporary implementation:
-    Currently retrieves chat history using the provided
-    profile_id from the query parameter.
+    medical_profile = get_medical_profile(request.user)
 
-    TODO:
-    Replace profile_id with the authenticated user's
-    medical profile after authentication is implemented.
-    """
-
-    profile_id = request.GET.get("profile_id")
-
-    if not profile_id:
-        return error_response(
-            "Profile ID is required.",
-            400
-        )
-
-    try:
-        MedicalProfile.objects.get(id=profile_id)
-    except MedicalProfile.DoesNotExist:
+    if medical_profile is None:
         return error_response(
             "Medical profile not found.",
-            404
+            status=404
         )
 
-    chat_histories = ChatHistory.objects.filter(medicalProfile_id=profile_id).order_by("createdAt")
+    chat_histories = ChatHistory.objects.filter(
+        medicalProfile=medical_profile
+    ).order_by("CreatedAt")
 
     data = []
 
     for chat in chat_histories:
         data.append({
             "id": chat.id,
-            "medical_profile_id": chat.medicalProfile_id,
             "user_message": chat.userMessage,
             "ai_response": chat.aiResponse,
             "created_at": chat.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
@@ -746,42 +774,35 @@ def get_chat_history(request):
     return JsonResponse(data, safe=False)
 
 def save_chat_history(request):
-    """
-    Save a new chat history.
+    body = parse_json_body(request)
 
-    Temporary implementation:
-    Currently uses medical_profile_id from the request body.
+    if isinstance(body, JsonResponse):
+        return body
 
-    TODO:
-    Replace medical_profile_id with the authenticated user's
-    medical profile after authentication is implemented.
-    """
+    required_fields = [
+        "user_message",
+        "ai_response",
+    ]
 
-    body, error = parse_json_body(request)
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
 
-    if error:
-        return error
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
 
-    medical_profile_id = body.get("medical_profile_id")
     user_message = body.get("user_message")
     ai_response = body.get("ai_response")
 
-    if not all([
-        medical_profile_id,
-        user_message,
-        ai_response,
-    ]):
-        return error_response(
-            "All fields are required.",
-            400
-        )
+    medical_profile = get_medical_profile(request.user)
 
-    try:
-        medical_profile = MedicalProfile.objects.get(id=medical_profile_id)
-    except MedicalProfile.DoesNotExist:
+    if medical_profile is None:
         return error_response(
             "Medical profile not found.",
-            404
+            status=404
         )
 
     ChatHistory.objects.create(
@@ -791,7 +812,8 @@ def save_chat_history(request):
     )
 
     return success_response(
-        "Chat history saved successfully."
+        "Chat history saved successfully.",
+        status=201
     )
 
 @csrf_exempt
@@ -806,4 +828,138 @@ def chat_history_api(request):
     return error_response(
         "Method not allowed.",
         405
+    )
+
+
+# ============================
+# AUTHENTICATION API
+# ============================
+
+@csrf_exempt
+def register_api(request):
+
+    if request.method != "POST":
+        return error_response(
+            "Method not allowed.",
+            status=405
+        )
+
+    body = parse_json_body(request)
+
+    if isinstance(body, JsonResponse):
+        return body
+
+    required_fields = [
+        "username",
+        "email",
+        "password",
+        "full_name",
+        "diabetes_type",
+    ]
+
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
+
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
+    username = body.get("username")
+    email = body.get("email")
+    password = body.get("password")
+    full_name = body.get("full_name")
+    diabetes_type = body.get("diabetes_type")
+
+    if User.objects.filter(username=username).exists():
+        return error_response(
+            "Username already exists."
+        )
+
+    if User.objects.filter(email=email).exists():
+        return error_response(
+            "Email already exists."
+        )
+
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+    )
+
+    MedicalProfile.objects.create(
+        user=user,
+        fullName=full_name,
+        diabetesType=diabetes_type,
+    )
+
+    return success_response(
+        "User registered successfully.",
+        status=201
+    )
+
+@csrf_exempt
+def login_api(request):
+
+    if request.method != "POST":
+        return error_response(
+            "Method not allowed.",
+            status=405
+        )
+
+    body = parse_json_body(request)
+
+    if isinstance(body, JsonResponse):
+        return body
+
+    required_fields = [
+        "username",
+        "password",
+    ]
+
+    missing_fields = validate_required_fields(
+        body,
+        required_fields,
+    )
+
+    if missing_fields:
+        return error_response(
+            f"Missing required fields: {', '.join(missing_fields)}"
+        )
+
+    username = body.get("username")
+    password = body.get("password")
+
+    user = authenticate(
+        username=username,
+        password=password,
+    )
+
+    if user is None:
+        return error_response(
+            "Invalid username or password.",
+            status=401
+        )
+
+    token = generate_token(user)
+
+    medical_profile = MedicalProfile.objects.get(user=user)
+
+    return success_response(
+        message="Login successful.",
+        data={
+            "token": token,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+            },
+            "medical_profile": {
+                "id": medical_profile.id,
+                "full_name": medical_profile.fullName,
+                "diabetes_type": medical_profile.diabetesType,
+            },
+        },
     )
