@@ -1,5 +1,53 @@
 {% extends 'base.html' %}
-{% block title %}GlucoSense - List{% endblock %}
+{% load static %}
+
+{% block title %}Learn - GlucoSense Knowledge Center{% endblock %}
+
 {% block content %}
-<p>List page - coming soon</p>
+
+<!-- Featured Hero -->
+<section class="knowledge-hero">
+  <div class="knowledge-hero__content">
+    <span class="badge badge-green">Featured Article</span>
+    <h1>Managing Lifestyle Changes with Ease</h1>
+    <p>Learn how to integrate healthy glucose management into your daily life.</p>
+    <a href="#" class="btn btn-outline">Read Guide →</a>
+  </div>
+</section>
+
+<!-- Search & Filter -->
+<div class="container section-sm">
+  <div class="knowledge-filter">
+    <input class="form-control" type="text"
+           placeholder="Search for recipes, medical advice, or tips...">
+    <div class="filter-tags">
+      <button class="filter-tag active">All</button>
+      <button class="filter-tag">Type 1</button>
+      <button class="filter-tag">Type 2</button>
+      <button class="filter-tag">Prevention</button>
+      <button class="filter-tag">Healthy Living</button>
+      <button class="filter-tag">Complications</button>
+    </div>
+  </div>
+
+  <!-- Article Grid -->
+  <div class="grid-3 mt-8">
+    {% for article in articles %}
+    <div class="article-card card">
+      <img src="{{ article.image }}" alt="{{ article.title }}">
+      <div class="article-card__body">
+        <span class="badge badge-blue">{{ article.category }}</span>
+        <h3>{{ article.title }}</h3>
+        <p>{{ article.excerpt }}</p>
+        <div class="flex-between mt-4">
+          <span class="text-xs text-muted">{{ article.read_time }}</span>
+          <a href="{% url 'knowledge:detail' article.slug %}"
+             class="text-primary font-semibold text-sm">Read →</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
 {% endblock %}
