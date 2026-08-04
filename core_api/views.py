@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
-from .auth import generate_token
+from .auth import (generate_token, jwt_required)
 from .utils import (
     parse_json_body,
     success_response,
@@ -27,10 +27,6 @@ from .models import (
 # ==============================
 
 def get_article_list(request):
-
-    """
-    Mengambil semua daftar artikel edukasi diabetes.
-    """
     articles = Article.objects.all().order_by('createdAt')
     data = []
     
@@ -44,6 +40,25 @@ def get_article_list(request):
         })
         
     return JsonResponse(data, safe=False)
+
+def get_article_detail(request, article_id):
+
+    try:
+        article = Article.objects.get(id=article_id)
+    except Article.DoesNotExist:
+        return error_response(
+            "Article not found.",
+            status=404
+        )
+
+    return JsonResponse({
+        "id": article.id,
+        "title": article.title,
+        "content": article.content,
+        "category": article.category,
+        "thumbnail_url": article.thumbnailUrl,
+        "created_at": article.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
+    })
 
 
 # ========================
@@ -81,6 +96,26 @@ def get_doctor_list(request):
         
     return JsonResponse(data, safe=False)
 
+
+def get_doctor_detail(request, doctor_id):
+
+    try:
+        doctor = Doctor.objects.get(id=doctor_id)
+    except Doctor.DoesNotExist:
+        return error_response(
+            "Doctor not found.",
+            status=404
+        )
+
+    return JsonResponse({
+        "id": doctor.id,
+        "full_name": doctor.fullName,
+        "specialization": doctor.specialization,
+        "city": doctor.city,
+        "experience_years": doctor.experienceYears,
+        "description": doctor.description,
+        "profile_picture_url": doctor.profilePictureUrl,
+    })
 
 # =========================
 # BLOOD GLUCOSE API
@@ -266,6 +301,7 @@ def delete_glucose_log(request):
     )
 
 @csrf_exempt
+@jwt_required
 def glucose_log_api(request):
 
     if request.method == 'GET':
@@ -472,6 +508,7 @@ def delete_food_log(request):
     )
 
 @csrf_exempt
+@jwt_required
 def food_log_api(request):
 
     if request.method == "GET":
@@ -547,6 +584,30 @@ def update_medical_profile(request):
     birth_date = body.get("birth_date")
     weight_kg = body.get("weight_kg")
 
+    try:
+        target_sugar_low = float(target_sugar_low)
+        target_sugar_high = float(target_sugar_high)
+        weight_kg = float(weight_kg)
+    except (TypeError, ValueError):
+        return error_response(
+            "Target sugar and weight must be valid numbers."
+        )
+
+    if target_sugar_low <= 0:
+        return error_response(
+            "Target sugar low must be greater than 0."
+        )
+
+    if target_sugar_high <= 0 or target_sugar_high <= target_sugar_low:
+        return error_response(
+            "Target sugar high must be greater than 0 and greater than target sugar low."
+        )
+
+    if weight_kg <= 0:
+        return error_response(
+            "Weight must be greater than 0."
+        )
+
     medical_profile = get_medical_profile(request.user)
 
     if medical_profile is None:
@@ -566,10 +627,11 @@ def update_medical_profile(request):
 
     return success_response(
         "Medical profile updated successfully.",
-        status=200
+        status=201
     )
         
 @csrf_exempt
+@jwt_required
 def medical_profile_api(request):
 
     if request.method == "GET":
@@ -598,7 +660,7 @@ def get_favorite_doctor(request):
             status=404
         )
 
-    favorite_doctors = FavoriteDoctor.objects.filter(medicalProfile_id=profile_id).select_related("doctor")
+    favorite_doctors = FavoriteDoctor.objects.filter(medicalProfile=medical_profile).select_related("doctor")
 
     data = []
 
@@ -726,6 +788,7 @@ def delete_favorite_doctor(request):
     )
 
 @csrf_exempt
+@jwt_required
 def favorite_doctor_api(request):
 
     if request.method == "GET":
@@ -759,7 +822,7 @@ def get_chat_history(request):
 
     chat_histories = ChatHistory.objects.filter(
         medicalProfile=medical_profile
-    ).order_by("CreatedAt")
+    ).order_by("createdAt")
 
     data = []
 
@@ -817,6 +880,7 @@ def save_chat_history(request):
     )
 
 @csrf_exempt
+@jwt_required
 def chat_history_api(request):
 
     if request.method == "GET":
