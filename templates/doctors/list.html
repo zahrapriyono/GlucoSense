@@ -1,5 +1,52 @@
 {% extends 'base.html' %}
-{% block title %}GlucoSense - List{% endblock %}
 {% block content %}
-<p>List page - coming soon</p>
+
+<section class="container section">
+
+    <h1>Connect with Specialists</h1>
+    <p>Find verified endocrinologists and dietitians committed to your health.</p>
+
+    <!-- Search Bar -->
+     <div class="doctors-search">
+        <input class="form-control" type="text" placeholder="Search by name or condition...">
+        <input class="form-control" type="text" placeholder="City, State or Zip">
+        <select class="form-control">
+            <option>All Specialities</option>
+            <option>Endocrinologist</option>
+            <option>Clinical Dietitian</option>
+            <option>Nutritionist</option>
+        </select>
+        <button class="btn btn-primary">Search</button>
+     </div>
+
+    <!-- Doctor Cards -->
+     <div class="grid-3 mt-8">
+    {% for doctor in doctors %}
+    <div class="doctor-card card">
+      <div class="doctor-card__header">
+        <img src="<https://picsum.photos/80/80?random=>{{ forloop.counter }}"
+             alt="{{ doctor.name }}" class="doctor-photo">
+        <div>
+          <span class="text-warning">★</span>
+          <strong>{{ doctor.rating }}</strong>
+          <span class="text-muted">({{ doctor.reviews }} reviews)</span>
+        </div>
+      </div>
+      <h3>{{ doctor.name }}</h3>
+      <span class="badge badge-blue">{{ doctor.specialty }}</span>
+      <p class="mt-4">📋 {{ doctor.hospital }}</p>
+      <p>📅 Next available: {{ doctor.availability }}</p>
+      <p>🔒 {{ doctor.insurance }}</p>
+      <button class="btn btn-primary mt-4" style="width: 100%">Book Appointment</button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="text-center mt-8">
+    <button class="btn btn-outline">Load More Specialists</button>
+    <p class="text-muted text-xs mt-2">Showing {{ doctors|length }} specialists</p>
+  </div>
+
+</section>
+
 {% endblock %}
