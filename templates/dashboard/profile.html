@@ -1,5 +1,120 @@
 {% extends 'base.html' %}
-{% block title %}GlucoSense - Profile{% endblock %}
 {% block content %}
-<p>Profile page - coming soon</p>
+
+<section class="container section">
+
+  <!-- Profile Header -->
+  <div class="profile-header card-flat flex-between mb-6">
+    <div class="flex gap-4 items-center">
+      <img src="<https://picsum.photos/80/80?random=99>" class="profile-photo"
+           alt="{{ user.name }}">
+      <div>
+        <h1>{{ user.name }}</h1>
+        <p class="text-sm text-muted">Member since {{ user.member_since }}</p>
+        <div class="flex gap-2 mt-2">
+          <span class="badge badge-green">Premium Health Plan</span>
+          <span class="badge badge-blue">Verified Account</span>
+        </div>
+      </div>
+    </div>
+    <a href="#" class="btn btn-primary">✏️ Edit Profile</a>
+  </div>
+
+  <!-- Tabs -->
+  <div class="profile-tabs mb-6">
+    <button class="profile-tab active">My Health</button>
+    <button class="profile-tab">Saved Articles</button>
+    <button class="profile-tab">Account Settings</button>
+  </div>
+
+  <!-- Two Column Layout -->
+  <div class="profile-layout">
+
+    <!-- Left: Chart + Assessments -->
+    <div class="profile-main">
+      <div class="card mb-6">
+        <div class="flex-between mb-4">
+          <div>
+            <h3>Risk Trend</h3>
+            <p class="text-sm text-muted">Risk scores over the last 6 months</p>
+          </div>
+          <span class="text-green font-bold">Improving</span>
+        </div>
+        <canvas id="riskChart" height="120"></canvas>
+      </div>
+
+      <h4 class="mb-4">Recent Assessments</h4>
+      {% for a in user.recent_assessments %}
+      <div class="assessment-item card-flat flex-between mb-3">
+        <div class="flex gap-4 items-center">
+          <span>{{ a.date }}</span>
+          <strong class="{% if a.level == 1 %}text-green{% else %}text-warning{% endif %}">
+            {{ a.tier }}
+          </strong>
+        </div>
+        <div class="flex gap-4 items-center">
+          <span class="text-muted text-sm">{{ a.status }}</span>
+          <a href="#" class="text-primary text-sm">View Details &gt;</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Right: Snapshot -->
+    <aside class="profile-sidebar">
+      <div class="card">
+        <h3 class="mb-4">Health Snapshot</h3>
+        <div class="snapshot-item">
+          <p class="text-xs text-muted">TOTAL ASSESSMENTS</p>
+          <p class="text-4xl font-bold">{{ user.total_assessments }}</p>
+          <p class="text-sm text-muted">completed</p>
+        </div>
+        <div class="snapshot-item mt-4">
+          <p class="text-xs text-muted">SAVED RESOURCES</p>
+          <p class="text-4xl font-bold text-green">{{ user.saved_resources }}</p>
+          <p class="text-sm text-muted">insights</p>
+        </div>
+        <div class="snapshot-item mt-4">
+          <p class="text-xs text-muted">LAST ASSESSMENT</p>
+          <p class="font-semibold">{{ user.last_assessment }}</p>
+        </div>
+        <a href="/assessment/" class="btn btn-primary mt-6" style="width:100%">
+          New Assessment
+        </a>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="<https://cdn.jsdelivr.net/npm/chart.js>"></script>
+<script>
+  new Chart(document.getElementById('riskChart'), {
+    type: 'line',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Today'],
+      datasets: [{
+        label: 'Risk Level',
+        data: [65, 58, 62, 55, 50, 45],
+        borderColor: '#1B3A8A',
+        backgroundColor: 'rgba(27,58,138,0.08)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#1B3A8A',
+        pointRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { display: false },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+</script>
 {% endblock %}
