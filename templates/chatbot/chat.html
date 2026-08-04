@@ -1,5 +1,56 @@
 {% extends 'base.html' %}
-{% block title %}GlucoSense - Chat{% endblock %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
+{% endblock %}
+
 {% block content %}
-<p>Chat page - coming soon</p>
+<div class="chat-layout">
+
+    <!-- Sidebar -->
+     <aside class="chat-sidebar">
+        <div class="chat-sidebar__header flex-between">
+            <h3>History</h3>
+            <button class="btn btn-ghost btn-sm">+ New</button>
+        </div>
+        <ul class="chat-history" id="chatHistory"></ul>
+        <div class="chat-sidebar__footer">Chat Settings</div>
+     </aside>
+
+     <!-- Main -->
+      <main class="chat-main">
+        <div class="disclaimer-banner">
+            ⚠️ Medical Disclaimer: I am an AI assistant, not a doctor. In case of emergency, call local emergency services immediately.
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-bubble chat-bubble--bot">
+                Hello! I'm your GlucoSense AI assistant. How can i hel you understand your metabolic health or diabetes risk today?
+            </div>
+        </div>
+
+        <div class="chat-suggestions" id="chatSuggestions">
+            <button onclick="sendSuggestion('How can I lower my risk?')">
+                How can I lower my risk?
+            </button>
+            <button onclick="sendSuggestion('Signs of high blood sugar')">
+                Signs of high blood sugar
+            </button>
+            <button onclick="sendSuggestion('Best foods for glucose stability')">
+                Best foods for glucose stability
+            </button>
+        </div>
+
+        <div class="chat-input-area">
+            <textarea id="chatInput" placeholder="Type your health question..."></textarea>
+            <button id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+      </main>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/chatbot.js' %}"></script>
 {% endblock %}

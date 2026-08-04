@@ -1,5 +1,23 @@
 {% extends 'base.html' %}
-{% block title %}GlucoSense - Result{% endblock %}
 {% block content %}
-<p>Result page - coming soon</p>
+
+<div class="result-container">
+    <h1>Your Risk Assessment Result</h1>
+    <div id="resultContent">Loading your result...</div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const result = JSON.parse(sessionStorage.getItem('assessmentResult'));
+  if (result) {
+    document.getElementById('resultContent').innerHTML = `
+      <div class="result-card">
+        <h2>${result.tier} Risk</h2>
+        <p>Probability: ${result.probability}%</p>
+      </div>
+    `;
+  }
+</script>
 {% endblock %}

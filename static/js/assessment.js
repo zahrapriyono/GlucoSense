@@ -3,13 +3,13 @@ const totalSteps = 3;
 
 function showStep(step) {
     document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
-    document.getElementById('step${step}').classList.remove('hidden');
+    document.getElementById(`step${step}`).classList.remove('hidden');
 
     const percent = (step / totalSteps) * 100;
-    document.getElementById('progressFill').style.width = '${percent}$';
+    document.getElementById('progressFill').style.width = `${percent}$`;
 
     const labels = ['Personal Details', 'Medical History', 'Lifestyle'];
-    document.getElementById('stepLabel').textContent = 'Step ${step} of ${totalSteps}: ${labels[step - 1]}';
+    document.getElementById('stepLabel').textContent = `Step ${step} of ${totalSteps}: ${labels[step - 1]}`;
 }
 
 function nextStep() {
