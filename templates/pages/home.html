@@ -1,5 +1,46 @@
 {% extends 'base.html' %}
-{% block title %}GlucoSense - Home{% endblock %}
+{% load static %}
+
+{% block title %}GlucoSense - Take Control of Your Health{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
 {% block content %}
-<p>Home page - coming soon</p>
+<!-- SECTION 1: Hero -->
+ <section class="hero section">
+    <div class="container">
+        <!-- kiri: teks %=& CTA | kanan: gambar -->
+    </div>
+ </section>
+
+<!-- SECTION 2: Feature Cards (3 Cards) -->
+ <section class="features section-sm">
+    <div class="container grid-3">
+        <!-- Card: Risk Assessment, AI Chatbot, Find a Specialist -->
+    </div>
+ </section>
+
+<!-- SECTION 3: How it Works -->
+ <section class="how-it-works section">
+    <div class="container">
+        <!-- Step 01 Learn | 02 Assess | 03 Consult -->
+    </div>
+ </section>
+
+<!-- SECTION 4: Feature Insight -->
+  <section class="insights section">
+    <div class="container">
+        <!-- 3 article cards -->
+    </div>
+ </section>
+
+<!-- SECTION 5: News Banner -->
+ <section class="newsletter">
+    <div class="container">
+        <!-- Email input and Subscribbe button -->
+    </div>
+ </section>
+ 
 {% endblock %}
