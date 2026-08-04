@@ -1,5 +1,50 @@
 {% extends 'base.html' %}
-{% block title %}GlucoSense - <Form></Form>{% endblock %}
+{% load static %}
+
 {% block content %}
-<p>Form page - coming soon</p>
+<div class="assessment-wrapper">
+
+    <!-- Disclaimer -->
+     <div class="disclaimer-banner">
+        Medical Disclaimer: ...
+     </div>
+
+    <!-- Progress Indivator -->
+     <div class="progress-bar">
+        <div class="progress-bar__fill" id="progressFill" style="width: 33%;"></div>
+     </div>
+     <p id="stepLabel">Step 1 of 3: Personal Details</p>
+
+     <div class="assessment-form card-flat">
+        {% csrf_token %}
+
+        <!-- Step 1: Personal Details -->
+         <div class="step" id="step1">
+            <!-- Full Name, Age, Sex, Weight, Height, Activity Level, Family History -->
+             <button type="button" onclick="nextStep()" class="btn btn-primary">
+                Next Step →
+             </button>
+         </div>
+
+        <!-- Step 2: Medical History -->
+         <div class="step hidden" id="step2">
+            <!-- High Cholesterol, Stroke, Heart Disease, Difficulty Walking, etc. -->
+             <button type="button" onclick="prevStep()" class="btn btn-ghost">← Previous</button>
+             <button type="button" onclick="nextStep()" class="btn btn-primary">Next Step →</button>
+         </div>
+
+        <!-- Step 3: Lifestyle -->
+         <div class="step hidden" id="step3">
+            <!-- Blood Pressure, Smoking, Fruits, Veggies, General Health, etc. -->
+             <button type="button" onclick="prevStep()" class="btn btn-ghost">← Previous</button>
+             <button type="button" onclick="nextStep()" class="btn btn-primary">Calculate Risk Score</button>
+         </div>
+
+     </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/assessment.js' %}"></script>
 {% endblock %}
