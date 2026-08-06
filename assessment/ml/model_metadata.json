@@ -1,0 +1,35 @@
+{
+  "feature_names": [
+    "HighBP",
+    "HighChol",
+    "CholCheck",
+    "BMI",
+    "Smoker",
+    "Stroke",
+    "HeartDiseaseorAttack",
+    "PhysActivity",
+    "Fruits",
+    "Veggies",
+    "HvyAlcoholConsump",
+    "AnyHealthcare",
+    "NoDocbcCost",
+    "GenHlth",
+    "MentHlth",
+    "PhysHlth",
+    "DiffWalk",
+    "Sex",
+    "Age",
+    "Education",
+    "Income"
+  ],
+  "model_type": "XGBClassifier",
+  "auc_roc": 0.8250219304154295,
+  "risk_thresholds": {
+    "low_max": 0.3,
+    "moderate_max": 0.6
+  },
+  "needs_scaling": false,
+  "training_date": "2026-07-23T01:07:16.060461",
+  "dataset": "BRFSS 2015 Diabetes Health Indicators",
+  "n_training_samples": 202944
+}

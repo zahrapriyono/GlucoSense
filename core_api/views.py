@@ -844,7 +844,6 @@ def send_chat(request):
 
     required_fields = [
         "user_message",
-        "ai_response",
     ]
 
     missing_fields = validate_required_fields(
@@ -854,7 +853,8 @@ def send_chat(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     user_message = body.get("user_message")

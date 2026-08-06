@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Chatbot data (auto-generated, large files)
+chatbot/data/chroma_db/
+chatbot/data/medquad_diabetes.json
+
+# Virtual environment
+venv/
+
+# Environment variables (berisi API key!)
+.env
