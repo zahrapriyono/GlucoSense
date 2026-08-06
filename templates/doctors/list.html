@@ -24,8 +24,7 @@
     {% for doctor in doctors %}
     <div class="doctor-card card">
       <div class="doctor-card__header">
-        <img src="<https://picsum.photos/80/80?random=>{{ forloop.counter }}"
-             alt="{{ doctor.name }}" class="doctor-photo">
+        <img src="https://picsum.photos/80/80?random={{ forloop.counter }}">
         <div>
           <span class="text-warning">★</span>
           <strong>{{ doctor.rating }}</strong>

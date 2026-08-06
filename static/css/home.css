@@ -1,0 +1,214 @@
+/* =============================================
+   Home Page Styles
+   ============================================= */
+
+/* --- Hero --- */
+.hero__inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: var(--sp-12);
+    min-height: 60vh;
+}
+
+.hero__text h1 {
+    font-size: var(--text-5xl);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: var(--sp-4);
+}
+
+.hero__desc {
+    font-size: var(--text-lg);
+    color: var(--color-text-secondary);
+    max-width: 480px;
+    margin-bottom: var(--sp-4);
+}
+
+.hero__image {
+    display: flex;
+    justify-content: center;
+}
+
+.hero__image-circle {
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--color-primary-light);
+    box-shadow: var(--shadow-lg);
+}
+
+.hero__image-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --- Feature Cards --- */
+.features {
+    background: var(--color-bg);
+}
+
+.feature-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.feature-card__icon {
+    font-size: 2rem;
+    margin-bottom: var(--sp-4);
+}
+
+.feature-card h3 {
+    margin-bottom: var(--sp-2);
+}
+
+.feature-card a {
+    margin-top: auto;
+    display: inline-block;
+}
+
+.feature-card--primary {
+    background: var(--color-primary) !important;
+    color: white;
+    border-color: var(--color-primary) !important;
+}
+
+.feature-card--primary h3,
+.feature-card--primary p {
+    color: white;
+}
+
+/* --- How it Works --- */
+.how-it-works {
+    background: var(--color-bg-secondary);
+}
+
+.how-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-8);
+    position: relative;
+    text-align: center;
+}
+
+.how-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-3);
+}
+
+.how-step__number {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid var(--color-primary);
+    color: var(--color-primary);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.how-step__line {
+    position: absolute;
+    top: 32px;
+    width: 33%;
+    height: 1px;
+    border-top: 2px dashed var(--color-border);
+}
+
+.how-step h4 {
+    font-size: var(--text-xl);
+}
+
+/* --- Article Cards --- */
+.article-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    margin: calc(-1 * var(--sp-6)) calc(-1 * var(--sp-6)) var(--sp-4);
+    width: calc(100% + var(--sp-12));
+}
+
+.article-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.article-card__body h4 {
+    font-size: var(--text-base);
+    line-height: 1.4;
+}
+
+/* --- Newsletter --- */
+.newsletter {
+    background: var(--color-primary);
+    padding: var(--sp-16) 0;
+}
+
+.newsletter__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-8);
+}
+
+.newsletter__text h2,
+.newsletter__text p {
+    color: white;
+}
+
+.newsletter__text h2 {
+    font-size: var(--text-3xl);
+    margin-bottom: var(--sp-2);
+}
+
+.newsletter__form {
+    display: flex;
+    gap: var(--sp-3);
+    min-width: 380px;
+}
+
+.newsletter__form .form-control {
+    flex: 1;
+    background: rgba(255,255,255,0.15);
+    border-color: rgba(255,255,255,0.3);
+    color: white;
+}
+
+.newsletter__form .form-control::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+
+.newsletter__form .btn-primary {
+    background: white;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.newsletter__form .btn-primary:hover {
+    background: var(--color-primary-light);
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .hero__inner {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        text-align: center;
+    }
+
+    .hero__text h1 { font-size: var(--text-3xl); }
+    .hero__image { display: none; }
+    .hero__text .flex { justify-content: center; }
+    .how-steps { grid-template-columns: 1fr; }
+    .newsletter__inner { flex-direction: column; }
+    .newsletter__form { min-width: auto; width: 100%; }
+    .newsletter__text { text-align: center; }
+}

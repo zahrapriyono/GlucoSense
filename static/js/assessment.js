@@ -6,7 +6,8 @@ function showStep(step) {
     document.getElementById(`step${step}`).classList.remove('hidden');
 
     const percent = (step / totalSteps) * 100;
-    document.getElementById('progressFill').style.width = `${percent}$`;
+    document.getElementById('progressFill').style.width = `${percent}%`;
+    document.getElementById('stepPercent').textContent = `${Math.round(percent)}% Complete`;
 
     const labels = ['Personal Details', 'Medical History', 'Lifestyle'];
     document.getElementById('stepLabel').textContent = `Step ${step} of ${totalSteps}: ${labels[step - 1]}`;
@@ -31,7 +32,7 @@ async function submitAssessment() {
     btn.textContent = 'Processing...';
     btn.disabled = true;
 
-    const FormData = collectFormData();
+    const formData = collectFormData();
 
     const response = await fetch('/assessment/submit/', {
         method: 'POST',
@@ -39,7 +40,7 @@ async function submitAssessment() {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
         },
-        body: JSON.stringify(FormData)
+        body: JSON.stringify(formData)
     });
 
     const result = await response.json();
@@ -77,7 +78,13 @@ function collectFormData() {
         skipped_doctor_cost: document.querySelector('input[name=skipped_doctor_cost]:checked')?.value,
         education_level: document.getElementById('education_level').value,
         income_level: document.getElementById('income_level').value,
+    };
+}
 
-
-    }
+// Handle choice card selection (activity level, general health)
+function selectChoice(el) {
+    const group = el.dataset.group;
+    document.querySelectorAll(`.choice-card[data-group="${group}"]`)
+        .forEach(card => card.classList.remove('selected'));
+    el.classList.add('selected');
 }
