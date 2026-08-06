@@ -19,6 +19,8 @@ urlpatterns = [
 
     path('chat-history/', views.chat_history_api, name='chat_history_api'),
 
+    path('chat/', views.chat_api, name='chat_api'),
+
     path('register/', views.register_api, name='register_api'),
     
     path('login/', views.login_api, name='login_api'),

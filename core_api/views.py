@@ -836,7 +836,7 @@ def get_chat_history(request):
 
     return JsonResponse(data, safe=False)
 
-def save_chat_history(request):
+def send_chat(request):
     body = parse_json_body(request)
 
     if isinstance(body, JsonResponse):
@@ -858,7 +858,9 @@ def save_chat_history(request):
         )
 
     user_message = body.get("user_message")
-    ai_response = body.get("ai_response")
+    ai_response = (
+        "This is  dummy AI response."
+    )
 
     medical_profile = get_medical_profile(request.user)
 
@@ -875,7 +877,11 @@ def save_chat_history(request):
     )
 
     return success_response(
-        "Chat history saved successfully.",
+        message="Chat history saved successfully.",
+        data={
+            "user_message": user_message,
+            "ai_response": ai_response,
+        },
         status=201
     )
 
@@ -886,12 +892,21 @@ def chat_history_api(request):
     if request.method == "GET":
         return get_chat_history(request)
 
-    elif request.method == "POST":
-        return save_chat_history(request)
+    return error_response(
+        "Method not allowed.",
+        status=405
+    )
+
+@csrf_exempt
+@jwt_required
+def chat_api(request):
+
+    if request.method == "POST":
+        return send_chat(request)
 
     return error_response(
         "Method not allowed.",
-        405
+        status=405
     )
 
 
