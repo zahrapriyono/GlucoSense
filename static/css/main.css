@@ -167,6 +167,15 @@ p  { color: var(--color-text-secondary); line-height: 1.7; }
     color: var(--color-primary);
 }
 
+.nav__hamburger {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-text);
+}
+
 /* =============================================
    FOOTER
    ============================================= */
@@ -493,3 +502,68 @@ input[type="range"] {
         display: none;
     }
 }
+
+/* =============================================
+   Global Responsive
+   ============================================= */
+
+@media (max-width: 1024px) {
+    .container { padding: 0 var(--sp-6); }
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+    /* Typography */
+    h1 { font-size: var(--text-3xl) !important; }
+    h2 { font-size: var(--text-2xl) !important; }
+
+    /* Grid */
+    .grid-2,
+    .grid-3 { grid-template-columns: 1fr; }
+
+    /* Navbar — sembunyikan menu, tampilkan hamburger */
+    .nav__links { display: none; }
+    .nav__links.open { display: flex; flex-direction: column; }
+    .nav__hamburger { display: block; }
+
+    /* Chatbot layout */
+    .chat-layout { grid-template-columns: 1fr; }
+    .chat-sidebar { display: none; }
+
+    /* Profile layout */
+    .profile-layout { flex-direction: column; }
+
+    /* Newsletter */
+    .newsletter__inner { flex-direction: column; text-align: center; }
+    .newsletter__form  { width: 100%; }
+}
+
+/* =============================================
+   Micro-animations
+   ============================================= */
+
+/* Cards hover lift */
+.card, .article-card, .feature-card, .doctor-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Button press effect */
+.btn:active { transform: scale(0.98); }
+
+/* Fade-in on page load */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.section > .container,
+.assessment-form,
+.chat-layout {
+    animation: fadeInUp 0.4s ease both;
+}
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }

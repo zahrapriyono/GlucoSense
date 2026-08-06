@@ -1,22 +1,159 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Risk Result — GlucoSense{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/assessment.css' %}">
+{% endblock %}
+
 {% block content %}
+<div class="assessment-wrapper">
+  <div class="container" style="max-width: 720px; padding-top: 3rem; padding-bottom: 4rem;">
 
-<div class="result-container">
-    <h1>Your Risk Assessment Result</h1>
-    <div id="resultContent">Loading your result...</div>
+    <!-- Back link -->
+    <a href="{% url 'assessment:form' %}" class="text-primary text-sm mb-6 d-block">
+      ← Retake Assessment
+    </a>
+
+    <!-- Result Card -->
+    <div class="card text-center" id="resultCard" style="display:none!important;">
+
+      <!-- Icon berdasarkan tier -->
+      <div id="resultIcon" style="font-size: 4rem; margin-bottom: 1rem;"></div>
+
+      <!-- Tier Label -->
+      <span id="resultBadge" class="badge mb-4" style="font-size: 1rem; padding: 0.5rem 1.5rem;"></span>
+
+      <h1 id="resultTitle" class="mb-2"></h1>
+
+      <!-- Probability Gauge -->
+      <p class="text-muted mb-6">Estimated diabetes risk probability</p>
+      <div class="gauge-wrapper">
+        <div class="gauge">
+          <div class="gauge__fill" id="gaugeFill"></div>
+          <div class="gauge__label" id="gaugeLabel"></div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <p id="resultDesc" class="mt-6 mb-8" style="max-width: 480px; margin-left: auto; margin-right: auto;"></p>
+
+      <!-- Recommendations -->
+      <div class="result-recommendations" id="resultRecs"></div>
+
+      <!-- CTA Buttons -->
+      <div class="flex gap-4 mt-8" style="justify-content: center;">
+        <a href="{% url 'chatbot:chat' %}" class="btn btn-primary">Ask AI Chatbot</a>
+        <a href="{% url 'doctors:list' %}" class="btn btn-outline">Find a Specialist</a>
+      </div>
+
+      <!-- Disclaimer -->
+      <p class="text-xs text-muted mt-8">
+        ⚠️ This result is for informational purposes only and does not constitute a medical diagnosis.
+        Please consult a healthcare professional for proper evaluation.
+      </p>
+
+    </div>
+
+    <!-- Loading state (tampil sementara JS belum selesai) -->
+    <div id="loadingState" class="text-center">
+      <p class="text-muted">Loading your results...</p>
+    </div>
+
+    <!-- Error state (tampil kalau sessionStorage kosong) -->
+    <div id="errorState" class="card text-center" style="display:none!important;">
+      <p style="font-size: 2rem;">⚠️</p>
+      <h2>No Result Found</h2>
+      <p class="text-muted mb-6">It looks like you haven't completed the assessment yet.</p>
+      <a href="{% url 'assessment:form' %}" class="btn btn-primary">Take Assessment</a>
+    </div>
+
+  </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  const result = JSON.parse(sessionStorage.getItem('assessmentResult'));
-  if (result) {
-    document.getElementById('resultContent').innerHTML = `
-      <div class="result-card">
-        <h2>${result.tier} Risk</h2>
-        <p>Probability: ${result.probability}%</p>
-      </div>
+  const resultData = JSON.parse(sessionStorage.getItem('assessmentResult') || 'null');
+
+  // Sembunyikan loading
+  document.getElementById('loadingState').style.display = 'none';
+
+  if (!resultData) {
+    // Tampilkan error state jika tidak ada data
+    document.getElementById('errorState').style.removeProperty('display');
+  } else {
+    // Tampilkan result card
+    document.getElementById('resultCard').style.removeProperty('display');
+
+    const prob     = Math.round(resultData.probability || 0);
+    const tier     = resultData.tier || 'Unknown';
+    const probText = `${prob}%`;
+
+    // Map tier ke warna, icon, dan deskripsi
+    const tierConfig = {
+      'Low': {
+        icon: '✅',
+        badgeClass: 'badge-green',
+        title: 'Low Risk',
+        desc: 'Your current profile shows a low probability of diabetes. Keep maintaining your healthy habits!',
+        recs: [
+          '🥗 Continue eating a balanced diet rich in vegetables and whole grains',
+          '🏃 Maintain at least 150 minutes of moderate exercise per week',
+          '🩺 Schedule routine check-ups every 1–2 years',
+        ]
+      },
+      'Moderate': {
+        icon: '⚠️',
+        badgeClass: 'badge-yellow',
+        title: 'Moderate Risk',
+        desc: 'You have some risk factors that may increase your likelihood of developing diabetes. Taking action now can significantly reduce your risk.',
+        recs: [
+          '🥗 Reduce processed foods and refined sugars in your diet',
+          '🏋️ Aim for 30 minutes of exercise at least 5 days a week',
+          '🩺 Consult a doctor for a fasting blood glucose test',
+          '⚖️ Work toward achieving or maintaining a healthy BMI',
+        ]
+      },
+      'High': {
+        icon: '🚨',
+        badgeClass: 'badge-red',
+        title: 'High Risk',
+        desc: 'Your profile suggests a high risk. We strongly recommend consulting a healthcare professional as soon as possible.',
+        recs: [
+          '🏥 See a doctor or endocrinologist for a proper diagnosis',
+          '🩸 Request an HbA1c blood test immediately',
+          '💊 Discuss preventive medication options with your doctor',
+          '🥗 Work with a registered dietitian for a personalized meal plan',
+          '📱 Monitor your blood glucose levels regularly',
+        ]
+      }
+    };
+
+    const config = tierConfig[tier] || tierConfig['Moderate'];
+
+    document.getElementById('resultIcon').textContent  = config.icon;
+    document.getElementById('resultTitle').textContent = config.title;
+    document.getElementById('resultDesc').textContent  = config.desc;
+    document.getElementById('resultBadge').className   = `badge ${config.badgeClass} mb-4`;
+    document.getElementById('resultBadge').textContent = tier + ' Risk';
+    document.getElementById('gaugeLabel').textContent  = probText;
+    document.getElementById('gaugeFill').style.width   = probText;
+
+    // Warna gauge berdasarkan probabilitas
+    const gaugeEl = document.getElementById('gaugeFill');
+    if (prob < 35)       gaugeEl.style.background = '#22c55e'; // green
+    else if (prob < 65)  gaugeEl.style.background = '#f59e0b'; // yellow
+    else                 gaugeEl.style.background = '#ef4444'; // red
+
+    // Recommendations
+    const recsEl = document.getElementById('resultRecs');
+    recsEl.innerHTML = `
+      <h4 style="margin-bottom: 1rem;">Recommended Actions</h4>
+      <ul style="text-align: left; list-style: none; padding: 0;">
+        ${config.recs.map(r => `<li style="padding: 0.5rem 0; border-bottom: 1px solid var(--color-border);">${r}</li>`).join('')}
+      </ul>
     `;
   }
 </script>

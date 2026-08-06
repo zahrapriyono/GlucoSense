@@ -27,25 +27,40 @@ function prevStep() {
     }
 }
 
-async function submitAssessment() {
+async function submitAssessment(event) {
     const btn = event.target;
-    btn.textContent = 'Processing...';
+    const originalText = btn.textContent;
+
+    // Loading state
+    btn.textContent = '⏳ Processing...';
     btn.disabled = true;
 
-    const formData = collectFormData();
+    try {
+        const formData = collectFormData();
 
-    const response = await fetch('/assessment/submit/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        },
-        body: JSON.stringify(formData)
-    });
+        const response = await fetch('/assessment/submit/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify(formData)
+        });
 
-    const result = await response.json();
-    sessionStorage.setItem('assessmentResult', JSON.stringify(result));
-    window.location.href = '/assessment/result/';
+        if (!response.ok) {
+            throw new Error(`Server responded ${response.status}`);
+        }
+
+        const result = await response.json();
+        sessionStorage.setItem('assessmentResult', JSON.stringify(result));
+        window.location.href = '/assessment/result/';
+
+    } catch (err) {
+        // Reset button jika error
+        btn.textContent = originalText;
+        btn.disabled = false;
+        alert('Something went wrong. Please try again.');
+    }
 }
 
 function collectFormData() {
