@@ -22,6 +22,8 @@ from .models import (
     ChatHistory,
 )
 
+from chatbot.rag import get_response
+
 # ==============================
 # ARTICLE API
 # ==============================
@@ -858,9 +860,7 @@ def send_chat(request):
         )
 
     user_message = body.get("user_message")
-    ai_response = (
-        "This is  dummy AI response."
-    )
+    ai_response = get_response(user_message)
 
     medical_profile = get_medical_profile(request.user)
 
