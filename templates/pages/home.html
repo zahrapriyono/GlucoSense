@@ -18,12 +18,26 @@
             <h1>Take Control of <span class="text-primary">Your Health.</span></h1>
             <p class="hero__desc">
                 Diabetes affects over <strong>400 million people</strong> globally.
-                Understanding your risk is the first step toward a healthier, more proactive future.
-                <br><small class="text-muted">(Source: World Health Organization)</small>
+                Understanding your risk is the first step toward a healthier future.
             </p>
             <div class="flex gap-4 mt-8">
-                <a href="{% url 'assessment:form' %}" class="btn btn-primary btn-lg">Assess Your Risk</a>
+                <a href="{% url 'assessment:form' %}" class="btn btn-primary btn-lg">Assess Your Risk →</a>
                 <a href="#how-it-works" class="btn btn-outline btn-lg">How it Works</a>
+            </div>
+            <!-- Animated counters -->
+            <div class="hero__stats">
+                <div class="hero__stat-item">
+                    <div class="hero__stat-number"><span data-count="50">0</span>K+</div>
+                    <div class="hero__stat-label">Users Screened</div>
+                </div>
+                <div class="hero__stat-item">
+                    <div class="hero__stat-number"><span data-count="94">0</span>%</div>
+                    <div class="hero__stat-label">Accuracy Rate</div>
+                </div>
+                <div class="hero__stat-item">
+                    <div class="hero__stat-number"><span data-count="21">0</span></div>
+                    <div class="hero__stat-label">BRFSS Features</div>
+                </div>
             </div>
         </div>
         <div class="hero__image">
@@ -32,6 +46,7 @@
                      alt="Healthcare illustration">
             </div>
         </div>
+
     </div>
 </section>
 

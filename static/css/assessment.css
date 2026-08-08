@@ -109,3 +109,50 @@
         display: none;
     }
 }
+
+/* Probability Gauge */
+.gauge-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.gauge {
+    width: 100%;
+    max-width: 400px;
+    height: 24px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    position: relative;
+}
+
+.gauge__fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 1s ease;
+    min-width: 0%;
+}
+
+.gauge__label {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: white;
+    mix-blend-mode: difference;
+}
+
+/* Result Recommendations */
+.result-recommendations {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: left;
+}
+
+/* Badge colors not in main.css */
+.badge-yellow { background: #fef3c7; color: #92400e; }
+.badge-red    { background: #fee2e2; color: #991b1b; }

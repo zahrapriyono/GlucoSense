@@ -3,51 +3,117 @@
 
 {% block title %}Learn - GlucoSense Knowledge Center{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/knowledge.css' %}">
+{% endblock %}
+
 {% block content %}
 
-<!-- Featured Hero -->
+<!-- Hero Section -->
 <section class="knowledge-hero">
-  <div class="knowledge-hero__content">
-    <span class="badge badge-green">Featured Article</span>
-    <h1>Managing Lifestyle Changes with Ease</h1>
-    <p>Learn how to integrate healthy glucose management into your daily life.</p>
-    <a href="#" class="btn btn-outline">Read Guide →</a>
+  <div class="container knowledge-hero__inner">
+    <div class="knowledge-hero__text">
+      <span class="badge badge-green mb-4">📚 Featured Article</span>
+      <h1>Managing Lifestyle Changes<br>with Ease</h1>
+      <p>Learn how to integrate healthy glucose management into your daily routine - one step a time.</p>
+      <a href="#" class="btn btn-outline" style="color: white; border-color: rgba(255,255,255, 0.5);">Read Guide →</a>
+    </div>
+    <div class="knowledge-hero__stat">
+      <div class="knowledge-hero__stat-item">
+        <div style="font-size: 2.5rem; font-weight: 800;">120+</div>
+        <div style="opacity: 0.75; font-size: 0.875rem;">Articles Published</div>
+      </div>
+      <div class="knowledge-hero__stat-item">
+        <div style="font-size: 2.5rem; font-weight: 800;">15K</div>
+        <div style="opacity: 0.75; font-size: 0.875rem;">Monthly Readers</div>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- Search & Filter -->
-<div class="container section-sm">
+<div class="container" style="padding-top: 3rem; padding-bottom: 1rem;">
   <div class="knowledge-filter">
-    <input class="form-control" type="text"
-           placeholder="Search for recipes, medical advice, or tips...">
-    <div class="filter-tags">
-      <button class="filter-tag active">All</button>
-      <button class="filter-tag">Type 1</button>
-      <button class="filter-tag">Type 2</button>
-      <button class="filter-tag">Prevention</button>
-      <button class="filter-tag">Healthy Living</button>
-      <button class="filter-tag">Complications</button>
+    <div class="knowledge-search-wrap">
+      <span class="knowledge-search-icon">🔍</span>
+      <input class="form-control knowledge-search" type="text" 
+            id="searchInput" placeholder="Search articles, topics, or tips..."
+            oninput="filterArticles()">
+    </div>
+    <div class="filter-tags" id="filterTags">
+      <button class="filter-tag active" onclick="setFilter(this, 'all')">All</button>
+      <button class="filter-tag" onclick="setFilter(this, 'type 1')">Type 1</button>
+      <button class="filter-tag" onclick="setFilter(this, 'type 2')">Type 2</button>
+      <button class="filter-tag" onclick="setFilter(this, 'prevention')">Prevention</button>
+      <button class="filter-tag" onclick="setFilter(this, 'healthy living')">Healthy Livig</button>
+      <button class="filter-tag" onclick="setFilter(this, 'nutrition')">Nutrition</button>
+      <button class="filter-tag" onclick="setFilter(this, 'lifestyle')">Lifestyle</button>
+      <button class="filter-tag" onclick="setFilter(this, 'research')">Research</button>
     </div>
   </div>
+</div>
 
-  <!-- Article Grid -->
-  <div class="grid-3 mt-8">
+<!-- Article Grid -->
+<div class="container" style="padding-bottom: 5rem;">
+  <p class="text-muted text-sm mb-4" id="resultCount">Showing {{ articles|length }} articles</p>
+
+  <div class="grid-3" id="articleGrid">
     {% for article in articles %}
-    <div class="article-card card">
+    <div class="article-card card" data-category="{{ article.category|lower }}">
       <img src="{{ article.image }}" alt="{{ article.title }}">
       <div class="article-card__body">
         <span class="badge badge-blue">{{ article.category }}</span>
-        <h3>{{ article.title }}</h3>
+        <h4>{{ article.title }}</h4>
         <p>{{ article.excerpt }}</p>
         <div class="flex-between mt-4">
-          <span class="text-xs text-muted">{{ article.read_time }}</span>
-          <a href="{% url 'knowledge:detail' article.slug %}"
-             class="text-primary font-semibold text-sm">Read →</a>
+          <span class="text-xs text-muted">⏱ {{ article.read_time }}</span>
+          <a href="{% url 'knowledge:detail' article.slug %}" class="text-primary font-semibold text-sm">Read →</a>
         </div>
       </div>
     </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 4rem 0;">
+      <p class="text-muted">No articles found.</p>
+    </div>
     {% endfor %}
   </div>
-
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let activeFilter = 'all';
+  
+  function setFilter(btn, category) {
+    activeFilter = category;
+    document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    filterArticles();
+  }
+
+  function filterArticles() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.article-card');
+    let visible = 0;
+
+    cards.forEach(card => {
+      const cat = card.dataset.category || '';
+      const title = card.querySelector('h4')?.textContent.toLowerCase() || '';
+      const desc = card.querySelector('p')?.textContent.toLowerCase() || '';
+
+      const matchFilter = activeFilter === 'all' || cat.includes(activeFilter);
+      const matchSearch = !q || title.includes(q) || desc.includes(q) || cat.includes(q);
+
+      if (matchFilter && matchSearch) {
+        card.style.display = '';
+        visible++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    document.getElementById('resultCount').textContent = `Showing ${visible} article${visible !== 1 ? 's' : ''}`;
+  }
+</script>
 {% endblock %}

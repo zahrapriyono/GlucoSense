@@ -26,7 +26,7 @@
 
         <div class="chat-messages" id="chatMessages">
             <div class="chat-bubble chat-bubble--bot">
-                Hello! I'm your GlucoSense AI assistant. How can i hel you understand your metabolic health or diabetes risk today?
+                Hello! I'm your GlucoSense AI assistant. How can I help you understand your metabolic health or diabetes risk today?
             </div>
         </div>
 
@@ -43,8 +43,11 @@
         </div>
 
         <div class="chat-input-area">
-            <textarea id="chatInput" placeholder="Type your health question..."></textarea>
-            <button id="sendBtn" onclick="sendMessage()">➤</button>
+            <div class="chat-input-inner">
+                <textarea id="chatInput" placeholder="Type your health question..."
+                          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+                <button id="sendBtn" onclick="sendMessage()">➤</button>
+            </div>
         </div>
       </main>
 

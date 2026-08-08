@@ -1,51 +1,108 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Find a Doctor — GlucoSense{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/doctors.css' %}">
+{% endblock %}
+
 {% block content %}
 
-<section class="container section">
+<div class="doctors-page">
 
-    <h1>Connect with Specialists</h1>
-    <p>Find verified endocrinologists and dietitians committed to your health.</p>
+  <!-- Disclaimer banner -->
+  <div class="disclaimer-banner">
+    ℹ️ GlucoSense provides informational content. This tool is not a substitute for professional medical advice, diagnosis, or treatment.
+  </div>
 
-    <!-- Search Bar -->
-     <div class="doctors-search">
-        <input class="form-control" type="text" placeholder="Search by name or condition...">
-        <input class="form-control" type="text" placeholder="City, State or Zip">
-        <select class="form-control">
-            <option>All Specialities</option>
-            <option>Endocrinologist</option>
-            <option>Clinical Dietitian</option>
-            <option>Nutritionist</option>
-        </select>
-        <button class="btn btn-primary">Search</button>
-     </div>
+  <div class="container" style="padding-top: 2.5rem; padding-bottom: 5rem;">
 
-    <!-- Doctor Cards -->
-     <div class="grid-3 mt-8">
-    {% for doctor in doctors %}
-    <div class="doctor-card card">
-      <div class="doctor-card__header">
-        <img src="https://picsum.photos/80/80?random={{ forloop.counter }}">
-        <div>
-          <span class="text-warning">★</span>
-          <strong>{{ doctor.rating }}</strong>
-          <span class="text-muted">({{ doctor.reviews }} reviews)</span>
-        </div>
+    <!-- Page Header -->
+    <h1 class="mb-2">Connect with Specialists</h1>
+    <p class="text-secondary mb-6">Find verified endocrinologists and dietitians committed to your metabolic health.</p>
+
+    <!-- Search Bar — horizontal row -->
+    <div class="doctors-search">
+      <div class="doctors-search__field">
+        <span class="doctors-search__icon">🔍</span>
+        <input class="doctors-search__input" type="text" id="searchName"
+               placeholder="Search by name or condition...">
       </div>
-      <h3>{{ doctor.name }}</h3>
-      <span class="badge badge-blue">{{ doctor.specialty }}</span>
-      <p class="mt-4">📋 {{ doctor.hospital }}</p>
-      <p>📅 Next available: {{ doctor.availability }}</p>
-      <p>🔒 {{ doctor.insurance }}</p>
-      <button class="btn btn-primary mt-4" style="width: 100%">Book Appointment</button>
+      <div class="doctors-search__divider"></div>
+      <div class="doctors-search__field">
+        <span class="doctors-search__icon">📍</span>
+        <input class="doctors-search__input" type="text" id="searchLocation"
+               placeholder="City, State or Zip">
+      </div>
+      <div class="doctors-search__divider"></div>
+      <div class="doctors-search__field">
+        <span class="doctors-search__icon">📋</span>
+        <select class="doctors-search__input" id="searchSpecialty">
+          <option value="">All Specialties</option>
+          <option value="endocrinologist">Endocrinologist</option>
+          <option value="clinical dietitian">Clinical Dietitian</option>
+          <option value="nutritionist">Nutritionist</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="border-radius: var(--radius-full); padding: 0.75rem 1.75rem;">
+        Search
+      </button>
     </div>
-    {% endfor %}
-  </div>
 
-  <div class="text-center mt-8">
-    <button class="btn btn-outline">Load More Specialists</button>
-    <p class="text-muted text-xs mt-2">Showing {{ doctors|length }} specialists</p>
-  </div>
+    <!-- Filter Chips -->
+    <div class="doctors-filters mt-4">
+      <button class="filter-chip">Specialty ▾</button>
+      <button class="filter-chip filter-chip--active">Availability: This Week ✓</button>
+      <button class="filter-chip">Top Rated</button>
+      <button class="filter-chip">Accepts Insurance</button>
+    </div>
 
-</section>
+    <!-- Doctor Cards Grid -->
+    <div class="grid-3 mt-8" id="doctorGrid">
+      {% for doctor in doctors %}
+      <div class="doctor-card card" data-specialty="{{ doctor.specialty|lower }}">
+
+        <!-- Header: photo + rating + name -->
+        <div class="doctor-card__header">
+          <img src="{{ doctor.photo }}" alt="{{ doctor.name }}" class="doctor-photo">
+          <div class="doctor-card__info-top">
+            <div class="doctor-rating">
+              <span class="star-icon">★</span>
+              <strong>{{ doctor.rating }}</strong>
+              <span class="text-muted text-xs">({{ doctor.reviews }} reviews)</span>
+            </div>
+            <h3 class="doctor-name">{{ doctor.name }}</h3>
+            <span class="badge badge-blue">{{ doctor.specialty }}</span>
+          </div>
+        </div>
+
+        <!-- Details -->
+        <ul class="doctor-details">
+          <li><span class="detail-icon">🏥</span> {{ doctor.hospital }}</li>
+          <li><span class="detail-icon">📅</span> Next available: {{ doctor.availability }}</li>
+          <li><span class="detail-icon">🔒</span> {{ doctor.insurance }}</li>
+        </ul>
+
+        <!-- Actions -->
+        <div class="doctor-card__actions">
+          <button class="btn btn-primary" style="flex: 1;">Book Appointment</button>
+          <button class="btn btn-outline doctor-msg-btn" title="Send message">💬</button>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Load More -->
+    <div class="text-center mt-8">
+      <button class="btn btn-outline" style="border-radius: var(--radius-full); padding: 0.6rem 2rem;">
+        Load More Specialists
+      </button>
+      <p class="text-muted text-xs mt-2">Showing {{ doctors|length }} of {{ total }} specialists in your area.</p>
+    </div>
+
+  </div>
+</div>
 
 {% endblock %}

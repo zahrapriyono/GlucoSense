@@ -1,0 +1,328 @@
+/* =============================================
+   GlucoSense — Animations & Dynamic CSS
+   ============================================= */
+
+/* -----------------------------------------------
+   KEYFRAMES
+   ----------------------------------------------- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInLeft {
+    from { opacity: 0; transform: translateX(-32px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(32px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+}
+@keyframes bounceIn {
+    0%   { opacity: 0; transform: scale(0.3); }
+    50%  { transform: scale(1.05); }
+    70%  { transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+@keyframes gaugeFill {
+    from { width: 0%; }
+}
+@keyframes countUp {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-12px); }
+}
+@keyframes ripple {
+    0%   { transform: scale(0); opacity: 0.6; }
+    100% { transform: scale(4); opacity: 0; }
+}
+@keyframes typingDot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30%            { transform: translateY(-6px); opacity: 1; }
+}
+@keyframes gradientShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* -----------------------------------------------
+   SCROLL-REVEAL — applied by JS IntersectionObserver
+   ----------------------------------------------- */
+
+/* Initial state — hidden */
+.reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.reveal--left  { transform: translateX(-32px); }
+.reveal.reveal--right { transform: translateX(32px); }
+.reveal.reveal--scale { transform: scale(0.92); }
+
+/* Revealed state — JS adds this class */
+.reveal.visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* Stagger delays — add to children */
+.stagger > * { transition-delay: calc(var(--i, 0) * 80ms); }
+.stagger > *:nth-child(1) { --i: 0; }
+.stagger > *:nth-child(2) { --i: 1; }
+.stagger > *:nth-child(3) { --i: 2; }
+.stagger > *:nth-child(4) { --i: 3; }
+.stagger > *:nth-child(5) { --i: 4; }
+.stagger > *:nth-child(6) { --i: 5; }
+
+/* -----------------------------------------------
+   LOADING STATES
+   ----------------------------------------------- */
+
+/* Skeleton shimmer */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+    border-radius: var(--radius-md);
+}
+
+/* Spinner */
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+}
+.spinner--primary {
+    border-color: rgba(27,58,138,0.2);
+    border-top-color: var(--color-primary);
+}
+
+/* Button loading state */
+.btn.loading {
+    pointer-events: none;
+    opacity: 0.8;
+    gap: var(--sp-3);
+}
+.btn.loading::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+/* Typing indicator (chatbot) */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 16px;
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    width: fit-content;
+}
+.typing-indicator span {
+    width: 6px;
+    height: 6px;
+    background: var(--color-text-muted);
+    border-radius: 50%;
+    animation: typingDot 1.2s infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+/* -----------------------------------------------
+   ENHANCED INTERACTIONS
+   ----------------------------------------------- */
+
+/* Ripple effect on buttons */
+.btn { position: relative; overflow: hidden; }
+.btn .ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    animation: ripple 0.6s ease-out forwards;
+    pointer-events: none;
+    transform-origin: center;
+}
+
+/* Choice card — enhanced */
+.choice-card {
+    position: relative;
+    overflow: hidden;
+}
+.choice-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--color-primary);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 0;
+}
+.choice-card:hover::before { opacity: 0.04; }
+.choice-card.selected::before { opacity: 0.06; }
+
+/* Form control — enhanced focus */
+.form-control {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+.form-control:focus { transform: none; }
+
+/* Card hover — enhanced */
+.card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(27,58,138,0.1);
+    border-color: rgba(27,58,138,0.15);
+}
+
+/* Navbar link — underline slide */
+.navbar__link {
+    position: relative;
+}
+.navbar__link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--color-primary);
+    transition: width 0.25s ease;
+}
+.navbar__link:hover::after,
+.navbar__link.active::after { width: 100%; }
+/* Remove old border-bottom approach */
+.navbar__link { border-bottom: none !important; }
+
+/* -----------------------------------------------
+   PROGRESS BAR — Animated
+   ----------------------------------------------- */
+.progress-bar__fill {
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+.progress-bar__fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 30px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+/* -----------------------------------------------
+   BADGE — Animated
+   ----------------------------------------------- */
+.badge { transition: transform 0.2s ease; }
+.badge:hover { transform: scale(1.05); }
+
+/* -----------------------------------------------
+   SECTION TITLES — Gradient underline
+   ----------------------------------------------- */
+.section-title {
+    display: inline-block;
+    position: relative;
+    margin-bottom: var(--sp-3);
+}
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 48px;
+    height: 3px;
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+    transition: width 0.4s ease;
+}
+.section-title:hover::after { width: 100%; }
+
+/* -----------------------------------------------
+   FLOATING ACTION / SCROLL TO TOP
+   ----------------------------------------------- */
+.scroll-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 44px;
+    height: 44px;
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 50;
+}
+.scroll-top.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.scroll-top:hover { background: var(--color-primary-dark); }
+
+/* -----------------------------------------------
+   NAVBAR SCROLL STATE
+   ----------------------------------------------- */
+.navbar.scrolled {
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(12px);
+    background: rgba(255,255,255,0.92);
+}
+
+/* -----------------------------------------------
+   RESULT PAGE — Gauge animation
+   ----------------------------------------------- */
+.gauge__fill {
+    animation: gaugeFill 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* -----------------------------------------------
+   COUNTER ANIMATION
+   ----------------------------------------------- */
+.count-up { animation: countUp 0.3s ease; }

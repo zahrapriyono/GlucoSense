@@ -1,38 +1,38 @@
 {% load static %}
-<nav class="navbar">
-    <div class="navbar__inner">
-        <!-- Logo -->
-        <a href="{% url 'pages:home' %}" class="navbar__logo">GlucoSense</a>
+<div class="navbar__inner">
+    <!-- Logo -->
+    <a href="{% url 'pages:home' %}" class="navbar__logo">Gluco<span style="color:#16A34A">Sense</span></a>
 
-        <!-- Navigation Links -->
-        <ul class="navbar__links">
-            <li>
-                <a href="{% url 'knowledge:list' %}"
-                   class="navbar__link {% if request.resolver_match.app_name == 'knowledge' %}active{% endif %}">
-                    Learn
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'assessment:form' %}"
-                   class="navbar__link {% if request.resolver_match.app_name == 'assessment' %}active{% endif %}">
-                    Assessment
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'chatbot:chat' %}"
-                   class="navbar__link {% if request.resolver_match.app_name == 'chatbot' %}active{% endif %}">
-                    Chatbot
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'doctors:list' %}"
-                   class="navbar__link {% if request.resolver_match.app_name == 'doctors' %}active{% endif %}">
-                    Find a Doctor
-                </a>
-            </li>
-        </ul>
+    <!-- Navigation Links -->
+    <ul class="navbar__links">
+        <li>
+            <a href="{% url 'knowledge:list' %}"
+               class="navbar__link {% if request.resolver_match.app_name == 'knowledge' %}active{% endif %}">
+                Learn
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'assessment:form' %}"
+               class="navbar__link {% if request.resolver_match.app_name == 'assessment' %}active{% endif %}">
+                Assessment
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'chatbot:chat' %}"
+               class="navbar__link {% if request.resolver_match.app_name == 'chatbot' %}active{% endif %}">
+                Chatbot
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'doctors:list' %}"
+               class="navbar__link {% if request.resolver_match.app_name == 'doctors' %}active{% endif %}">
+                Find a Doctor
+            </a>
+        </li>
+    </ul>
 
-        <!-- Profile Button -->
+    <!-- Right side: Profile + Hamburger -->
+    <div class="flex items-center gap-4">
         <a href="{% url 'dashboard:profile' %}" class="navbar__profile">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="8" r="4"/>
@@ -40,10 +40,6 @@
             </svg>
             Profile
         </a>
+        <button class="nav__hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
     </div>
-
-    <!-- Hamburger Menu -->
-     <button class="nav__hamburger" id="hamburgerBtn" onclick="toggleMenu()" aria-label="Toggle menu">
-        ☰
-     </button>
-</nav>
+</div>
