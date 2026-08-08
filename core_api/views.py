@@ -41,7 +41,11 @@ def get_article_list(request):
             'createdAt': article.createdAt.strftime('%Y-%m-%d %H:%M:%S')
         })
         
-    return JsonResponse(data, safe=False)
+    return success_response(
+        message="Articles retrieved successfully.",
+        data=data,
+        status=200
+    )
 
 def get_article_detail(request, article_id):
 
@@ -53,14 +57,18 @@ def get_article_detail(request, article_id):
             status=404
         )
 
-    return JsonResponse({
-        "id": article.id,
-        "title": article.title,
-        "content": article.content,
-        "category": article.category,
-        "thumbnail_url": article.thumbnailUrl,
-        "created_at": article.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
-    })
+    return success_response(
+        message="Article retrieved successfully.",
+        data={
+            "id": article.id,
+            "title": article.title,
+            "content": article.content,
+            "category": article.category,
+            "thumbnail_url": article.thumbnailUrl,
+            "created_at": article.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
+        },
+        status=200
+    )
 
 
 # ========================
@@ -68,23 +76,29 @@ def get_article_detail(request, article_id):
 # ========================
 
 def get_doctor_list(request):
-    city_filter = request.GET.get('city', None)
-    experience_filter = request.GET.get('experience', None)
+    city_filter = request.GET.get('city')
+    experience_filter = request.GET.get('experience')
     
-    doctors = Doctor.objects.all()
+    doctors = Doctor.objects.all().order_by('createdAt')
     
-    # Terapkan filter kota (case-insensitive / mengabaikan huruf besar-kecil)
     if city_filter:
         doctors = doctors.filter(city__iexact=city_filter)
         
-    # Terapkan filter minimal pengalaman kerja
     if experience_filter:
         try:
-            doctors = doctors.filter(experienceYears__gte=int(experience_filter))
+            experience_filter = int(experience_filter)
         except ValueError:
-            pass  # Mengabaikan filter jika input bukan angka valid
+            return error_response(
+                "Experience must be a valid number.",
+                status=400
+            )
+
+        doctors = doctors.filter(
+            experienceYears__gte=experience_filter
+        )
             
     data = []
+
     for doctor in doctors:
         data.append({
             'id': doctor.id,
@@ -96,8 +110,11 @@ def get_doctor_list(request):
             'createdAt': doctor.createdAt.strftime('%Y-%m-%d %H:%M:%S')
         })
         
-    return JsonResponse(data, safe=False)
-
+    return success_response(
+        message="Doctors retrieved successfully.",
+        data=data,
+        status=200
+    )
 
 def get_doctor_detail(request, doctor_id):
 
@@ -109,15 +126,19 @@ def get_doctor_detail(request, doctor_id):
             status=404
         )
 
-    return JsonResponse({
-        "id": doctor.id,
-        "full_name": doctor.fullName,
-        "specialization": doctor.specialization,
-        "city": doctor.city,
-        "experience_years": doctor.experienceYears,
-        "description": doctor.description,
-        "profile_picture_url": doctor.profilePictureUrl,
-    })
+    return success_response(
+        message="Doctor retrieved successfully.",
+        data={
+            "id": doctor.id,
+            "full_name": doctor.fullName,
+            "specialization": doctor.specialization,
+            "city": doctor.city,
+            "experience_years": doctor.experienceYears,
+            "description": doctor.description,
+            "profile_picture_url": doctor.profilePictureUrl,
+        },
+        status=200
+    )
 
 # =========================
 # BLOOD GLUCOSE API
@@ -148,7 +169,11 @@ def get_glucose_logs(request):
             'logged_at': log.loggedAt.strftime('%Y-%m-%d %H:%M:%S'),
         })
 
-    return JsonResponse(data, safe=False)
+    return success_response(
+        message="Blood glucose logs retrieved successfully.",
+        data=data,
+        status=200
+    )
 
 def create_glucose_log(request):
     body = parse_json_body(request)
@@ -169,7 +194,8 @@ def create_glucose_log(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     sugar_level = body.get("sugar_level")
@@ -191,7 +217,7 @@ def create_glucose_log(request):
         loggedAt=logged_at,
     )
     return success_response(
-        "Blood glucose log created successfully",
+        message="Blood glucose log created successfully",
         status=201,
         id=glucose_log.id
     )
@@ -216,7 +242,8 @@ def update_glucose_log(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     log_id = body.get("log_id")
@@ -250,8 +277,15 @@ def update_glucose_log(request):
     glucose_log.save()
 
     return success_response(
-        "Blood glucose log updated successfully.",
-        200
+        message="Blood glucose log updated successfully.",
+        data={
+            "id": glucose_log.id,
+            "medical_profile_id": glucose_log.medicalProfile_id,
+            "sugar_level": glucose_log.sugarLevel,
+            "log_context": glucose_log.logContext,
+            "logged_at": glucose_log.loggedAt.strftime("%Y-%m-%d %H:%M:%S"),
+        },
+        status=200
     )
 
 def delete_glucose_log(request):
@@ -271,7 +305,8 @@ def delete_glucose_log(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     log_id = body.get("log_id")
@@ -298,7 +333,7 @@ def delete_glucose_log(request):
     glucose_log.delete()
 
     return success_response(
-        "Blood glucose log deleted successfully.",
+        message="Blood glucose log deleted successfully.",
         status=200
     )
 
@@ -353,8 +388,11 @@ def get_food_logs(request):
             }
         )
 
-    return JsonResponse(data, safe=False)
-
+    return success_response(
+        message="Food logs retrieved successfully.",
+        data=data,
+        status=200
+    )
 
 def create_food_log(request):
     body = parse_json_body(request)
@@ -375,7 +413,8 @@ def create_food_log(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     food_name = body.get("food_name")
@@ -398,7 +437,7 @@ def create_food_log(request):
     )
 
     return success_response(
-        "Food log created successfully.",
+        message="Food log created successfully.",
         status=201,
         id=food_log.id,
     )
@@ -423,7 +462,8 @@ def update_food_log(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     log_id = body.get("log_id")
@@ -457,7 +497,13 @@ def update_food_log(request):
     food_log.save()
 
     return success_response(
-        "Food log updated successfully.",
+        message="Food log updated successfully.",
+        data={
+            "id": food_log.id,
+            "food_name": food_log.foodName,
+            "estimated_carbs": food_log.estimatedCarbs,
+            "logged_at": food_log.loggedAt.strftime("%Y-%m-%d %H:%M:%S"),
+        },
         status=200
     )
     
@@ -478,7 +524,8 @@ def delete_food_log(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     log_id = body.get("log_id")
@@ -505,7 +552,7 @@ def delete_food_log(request):
     food_log.delete()
 
     return success_response(
-        "Food log deleted successfully.",
+        message="Food log deleted successfully.",
         status=200
     )
 
@@ -543,16 +590,20 @@ def get_medical_profile_api(request):
             status=404
         )
 
-    return JsonResponse({
-        "id": medical_profile.id,
-        "user_id": medical_profile.user_id,
-        "full_name": medical_profile.fullName,
-        "diabetes_type": medical_profile.diabetesType,
-        "target_sugar_low": medical_profile.targetSugarLow,
-        "target_sugar_high": medical_profile.targetSugarHigh,
-        "birth_date": medical_profile.birthDate,
-        "weight_kg": medical_profile.weightKg,
-    })
+    return success_response(
+        message="Medical profile retrieved successfully.",
+        data={
+            "id": medical_profile.id,
+            "user_id": medical_profile.user_id,
+            "full_name": medical_profile.fullName,
+            "diabetes_type": medical_profile.diabetesType,
+            "target_sugar_low": medical_profile.targetSugarLow,
+            "target_sugar_high": medical_profile.targetSugarHigh,
+            "birth_date": medical_profile.birthDate,
+            "weight_kg": medical_profile.weightKg,
+        },
+        status=200
+    )
 
 def update_medical_profile(request):
     body = parse_json_body(request)
@@ -576,7 +627,8 @@ def update_medical_profile(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     full_name = body.get("full_name")
@@ -592,22 +644,26 @@ def update_medical_profile(request):
         weight_kg = float(weight_kg)
     except (TypeError, ValueError):
         return error_response(
-            "Target sugar and weight must be valid numbers."
+            "Target sugar and weight must be valid numbers.",
+            status=400
         )
 
     if target_sugar_low <= 0:
         return error_response(
-            "Target sugar low must be greater than 0."
+            "Target sugar low must be greater than 0.",
+            status=400
         )
 
     if target_sugar_high <= 0 or target_sugar_high <= target_sugar_low:
         return error_response(
-            "Target sugar high must be greater than 0 and greater than target sugar low."
+            "Target sugar high must be greater than 0 and greater than target sugar low.",
+            status=400
         )
 
     if weight_kg <= 0:
         return error_response(
-            "Weight must be greater than 0."
+            "Weight must be greater than 0.",
+            status=400
         )
 
     medical_profile = get_medical_profile(request.user)
@@ -628,8 +684,8 @@ def update_medical_profile(request):
     medical_profile.save()
 
     return success_response(
-        "Medical profile updated successfully.",
-        status=201
+        message="Medical profile updated successfully.",
+        status=200
     )
         
 @csrf_exempt
@@ -646,7 +702,6 @@ def medical_profile_api(request):
         "Method not allowed.",
         status=405
     )
-
 
 # ============================
 # FAVORITE DOCTOR API
@@ -681,7 +736,11 @@ def get_favorite_doctor(request):
             "created_at": favorite.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
         })
 
-    return JsonResponse(data, safe=False)
+    return success_response(
+        message="Favorite doctors retrieved successfully.",
+        data=data,
+        status=200
+    )
 
 def add_favorite_doctor(request):
     body = parse_json_body(request)
@@ -700,7 +759,8 @@ def add_favorite_doctor(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     doctor_id = body.get("doctor_id")
@@ -722,8 +782,8 @@ def add_favorite_doctor(request):
         )
 
     if FavoriteDoctor.objects.filter(
-        medicalProfile = medical_profile,
-        doctor = doctor
+        medicalProfile=medical_profile,
+        doctor=doctor
     ).exists():
         return error_response(
             "Doctor is already in favorites.",
@@ -736,7 +796,7 @@ def add_favorite_doctor(request):
     )
 
     return success_response(
-        "Doctor added to favorites successfully.",
+        message="Doctor added to favorites successfully.",
         status=201
     )
 
@@ -758,7 +818,8 @@ def delete_favorite_doctor(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     doctor_id = body.get("doctor_id")
@@ -785,7 +846,7 @@ def delete_favorite_doctor(request):
     favorite_doctor.delete()
 
     return success_response(
-        "Doctor removed from favorites successfully.",
+        message="Doctor removed from favorites successfully.",
         status=200
     )
 
@@ -806,7 +867,6 @@ def favorite_doctor_api(request):
         "Method not allowed.",
         status=405
     )
-
 
 # ============================
 # CHAT HISTORY API
@@ -836,7 +896,11 @@ def get_chat_history(request):
             "created_at": chat.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
         })
 
-    return JsonResponse(data, safe=False)
+    return success_response(
+        message="Chat history retrieved successfully.",
+        data=data,
+        status=200
+    )
 
 def send_chat(request):
     body = parse_json_body(request)
@@ -909,7 +973,6 @@ def chat_api(request):
         status=405
     )
 
-
 # ============================
 # AUTHENTICATION API
 # ============================
@@ -943,7 +1006,8 @@ def register_api(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     username = body.get("username")
@@ -975,7 +1039,7 @@ def register_api(request):
     )
 
     return success_response(
-        "User registered successfully.",
+        message="User registered successfully.",
         status=201
     )
 
@@ -1005,7 +1069,8 @@ def login_api(request):
 
     if missing_fields:
         return error_response(
-            f"Missing required fields: {', '.join(missing_fields)}"
+            f"Missing required fields: {', '.join(missing_fields)}",
+            status=400
         )
 
     username = body.get("username")
@@ -1041,4 +1106,5 @@ def login_api(request):
                 "diabetes_type": medical_profile.diabetesType,
             },
         },
+        status=200
     )
