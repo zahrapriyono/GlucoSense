@@ -33,12 +33,8 @@
 
     <!-- Right side: Profile + Hamburger -->
     <div class="flex items-center gap-4">
-        <a href="{% url 'dashboard:profile' %}" class="navbar__profile">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-            </svg>
-            Profile
+        <a href="{% url 'accounts:login' %}" class="navbar__profile">
+            🔒 Sign In
         </a>
         <button class="nav__hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
     </div>

@@ -116,7 +116,6 @@
 
 /* Inner wrapper untuk center konten */
 .chat-messages > * {
-    width: 100%;
     max-width: 760px;
     margin-left: auto;
     margin-right: auto;
@@ -155,6 +154,10 @@
     align-self: flex-end;
     border-bottom-right-radius: var(--radius-sm);
     box-shadow: 0 4px 12px rgba(27,58,138,0.25);
+    width: fit-content;     /* ← shrink to text width */
+    max-width: 68%;
+    margin-left: auto;      /* ← push to right */
+    margin-right: 0;
 }
 
 /* Bot avatar prefix */

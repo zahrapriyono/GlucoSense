@@ -17,7 +17,6 @@ def profile(request):
     return render(request, 'dashboard/profile.html', {'user': user_data})
 
 def report_detail(request, report_id):
-    # Dummy data — nanti di-replace dengan query ke Assessment model
     reports = {
         1: {
             'id': 1,
@@ -27,18 +26,40 @@ def report_detail(request, report_id):
             'probability': 23,
             'status': 'Optimal range',
             'risk_factors': [
-                {'name': 'BMI', 'value': '22.4', 'status': 'normal', 'note': 'Within healthy range'},
-                {'name': 'Blood Pressure', 'value': '118/76 mmHg', 'status': 'normal', 'note': 'Normal'},
-                {'name': 'Physical Activity', 'value': 'Moderate', 'status': 'normal', 'note': '3–5 hrs/week'},
-                {'name': 'General Health', 'value': 'Very Good', 'status': 'normal', 'note': 'Self-reported'},
-                {'name': 'Cholesterol Check', 'value': 'Yes', 'status': 'normal', 'note': 'Within 5 years'},
-                {'name': 'Smoking', 'value': 'Non-smoker', 'status': 'normal', 'note': 'No risk'},
+                {
+                    'name': 'BMI',
+                    'value': '22.4 (Normal Range)',
+                    'label': 'Optimal',       
+                    'status': 'optimal',      
+                    'bar': 85,                 
+                },
+                {
+                    'name': 'Activity Level',
+                    'value': '4+ days/week',
+                    'label': 'Active',
+                    'status': 'active',
+                    'bar': 90,
+                },
+                {
+                    'name': 'Family History',
+                    'value': 'No immediate relatives',
+                    'label': 'Minimal',
+                    'status': 'minimal',
+                    'bar': 20,
+                },
+                {
+                    'name': 'Blood Pressure',
+                    'value': '125/82 mmHg (Monitor)',
+                    'label': 'Elevated',
+                    'status': 'elevated',
+                    'bar': 65,
+                },
             ],
             'recommendations': [
-                'Maintain your current exercise routine of 3–5 hours per week.',
-                'Continue eating fruits and vegetables daily.',
-                'Schedule a routine cholesterol check in the next 12 months.',
-                'Monitor blood pressure monthly.',
+                {'text': 'Maintain your current moderate-to-high activity level.', 'icon': 'check'},
+                {'text': 'Continue balanced nutritional choices to support a healthy BMI.', 'icon': 'check'},
+                {'text': 'Monitor blood pressure periodically; slight elevation noted.', 'icon': 'warning'},
+                {'text': 'Schedule your routine annual screening next year.', 'icon': 'info'},
             ],
         },
         2: {
@@ -49,20 +70,42 @@ def report_detail(request, report_id):
             'probability': 51,
             'status': 'Needs attention',
             'risk_factors': [
-                {'name': 'BMI', 'value': '27.8', 'status': 'warning', 'note': 'Slightly above healthy range'},
-                {'name': 'Blood Pressure', 'value': '138/88 mmHg', 'status': 'warning', 'note': 'Pre-hypertension'},
-                {'name': 'Physical Activity', 'value': 'Sedentary', 'status': 'danger', 'note': 'Less than 1 hr/week'},
-                {'name': 'General Health', 'value': 'Good', 'status': 'normal', 'note': 'Self-reported'},
-                {'name': 'High Cholesterol', 'value': 'Yes', 'status': 'warning', 'note': 'Reported'},
-                {'name': 'Smoking', 'value': 'Former smoker', 'status': 'warning', 'note': 'Residual risk'},
+                {
+                    'name': 'BMI',
+                    'value': '22.4 (Normal Range)',
+                    'label': 'Optimal',       
+                    'status': 'optimal',      
+                    'bar': 85,                 
+                },
+                {
+                    'name': 'Activity Level',
+                    'value': '4+ days/week',
+                    'label': 'Active',
+                    'status': 'active',
+                    'bar': 90,
+                },
+                {
+                    'name': 'Family History',
+                    'value': 'No immediate relatives',
+                    'label': 'Minimal',
+                    'status': 'minimal',
+                    'bar': 20,
+                },
+                {
+                    'name': 'Blood Pressure',
+                    'value': '125/82 mmHg (Monitor)',
+                    'label': 'Elevated',
+                    'status': 'elevated',
+                    'bar': 65,
+                },
             ],
             'recommendations': [
-                'Consult a doctor about your blood pressure readings.',
-                'Aim to increase physical activity to at least 150 minutes per week.',
-                'Consider a dietary review with a registered dietitian.',
-                'Recheck cholesterol levels within 3 months.',
+                {'text': 'Maintain your current moderate-to-high activity level.', 'icon': 'check'},
+                {'text': 'Continue balanced nutritional choices to support a healthy BMI.', 'icon': 'check'},
+                {'text': 'Monitor blood pressure periodically; slight elevation noted.', 'icon': 'warning'},
+                {'text': 'Schedule your routine annual screening next year.', 'icon': 'info'},
             ],
         },
     }
     report = reports.get(report_id, reports[1])
-    return render(request, 'dashboard/report_detail.html', {'report': report})
+    return render(request, 'dashboard/report_detail.html', {'report': report})

@@ -1,102 +1,101 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Assessment Report — GlucoSense{% endblock %}
+{% block title %}Assessment Results — GlucoSense{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/report_detail.css' %}">
 {% endblock %}
 
 {% block content %}
+<div class="disclaimer-banner">
+  ℹ️ Medical Disclaimer: This assessment provides informational insights only. 
+  Always consult a healthcare professional.
+</div>
+
 <section class="container section-sm">
 
   <!-- Back link -->
-  <a href="{% url 'dashboard:profile' %}" class="flex items-center gap-2 text-sm text-muted mb-6"
-     style="width: fit-content;">
-    ← Back to Profile
+  <a href="{% url 'dashboard:profile' %}" style="font-size:0.875rem; color:#64748B; display:inline-flex; align-items:center; gap:0.4rem; margin-bottom:1.5rem;">
+    ← Back to History
   </a>
 
-  <!-- Report Header -->
-  <div class="flex-between mb-6">
+  <!-- Header: title + risk pill -->
+  <div class="report-header">
     <div>
-      <h1 style="font-size: 1.75rem;">Assessment Report</h1>
-      <p class="text-muted text-sm mt-1">{{ report.date }}</p>
+      <h1 class="report-title">Assessment Results</h1>
+      <p class="report-date">Taken on {{ report.date }}</p>
     </div>
-    <span class="risk-badge risk-badge--{% if report.level == 1 %}low{% elif report.level == 2 %}moderate{% else %}high{% endif %}"
-          style="font-size: 0.9rem; padding: 0.5rem 1.25rem;">
-      {{ report.tier }}
+    <span class="risk-pill risk-pill--{% if report.level == 1 %}low{% elif report.level == 2 %}moderate{% else %}high{% endif %}">
+      ✅ {{ report.tier }} (Level {{ report.level }})
     </span>
   </div>
 
-  <!-- Risk Score Card -->
-  <div class="card mb-6" style="background: linear-gradient(135deg, #1B3A8A, #0D1D56); color: white;">
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 2rem;">
-      <div>
-        <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-bottom: 0.5rem;">DIABETES RISK PROBABILITY</p>
-        <div style="font-size: 4rem; font-weight: 800; line-height: 1; color: white;">{{ report.probability }}%</div>
-        <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-top: 0.5rem;">{{ report.status }}</p>
-      </div>
-      <!-- Progress bar -->
-      <div style="flex: 1; max-width: 300px;">
-        <div style="height: 12px; background: rgba(255,255,255,0.2); border-radius: 99px; overflow: hidden;">
-          <div style="height: 100%; width: {{ report.probability }}%; background: white; border-radius: 99px;
-                      transition: width 1s ease;"></div>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;
-                    font-size: 0.75rem; color: rgba(255,255,255,0.6);">
-          <span>0% Low</span>
-          <span>100% High</span>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Two-column layout -->
+  <div class="report-layout">
 
-  <div class="profile-layout">
-    <!-- Left: Risk Factors -->
-    <div class="profile-main">
-      <div class="card">
-        <h3 class="mb-5">Risk Factor Breakdown</h3>
-        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-          {% for factor in report.risk_factors %}
-          <div class="risk-factor-row risk-factor--{{ factor.status }}">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span class="risk-factor-dot"></span>
-              <strong style="font-size: 0.875rem;">{{ factor.name }}</strong>
-            </div>
-            <span style="font-size: 0.875rem; font-weight: 500;">{{ factor.value }}</span>
-            <span style="font-size: 0.8rem; color: #64748B;">{{ factor.note }}</span>
+    <!-- LEFT: Factor Breakdown -->
+    <div class="card">
+      <h3 style="display:flex; align-items:center; gap:0.5rem;">
+        📊 Factor Breakdown
+      </h3>
+      <p class="text-muted text-sm mt-2 mb-4">
+        Your results indicate a well-managed lifestyle profile. Below is a detailed view of the individual factors evaluated.
+      </p>
+
+      <div class="factor-grid">
+        {% for factor in report.risk_factors %}
+        <div class="factor-item">
+          <div class="factor-header">
+            <span class="factor-name">{{ factor.name }}</span>
+            <span class="factor-label factor-label--{{ factor.status }}">{{ factor.label }}</span>
           </div>
-          {% endfor %}
+          <div class="factor-bar-track">
+            <div class="factor-bar-fill factor-bar-fill--{{ factor.status }}"
+                 style="width: {{ factor.bar }}%"></div>
+          </div>
+          <span class="factor-value">{{ factor.value }}</span>
         </div>
+        {% endfor %}
       </div>
     </div>
 
-    <!-- Right: Recommendations -->
-    <aside class="profile-sidebar">
+    <!-- RIGHT: Recommendations + Next Steps -->
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+
+      <!-- Recommendations -->
       <div class="card">
-        <h3 class="mb-4">Recommendations</h3>
-        <ol style="display: flex; flex-direction: column; gap: 0.75rem; padding-left: 1.25rem;">
+        <h3 class="rec-title">📍 Recommendations</h3>
+        <ul class="rec-list">
           {% for rec in report.recommendations %}
-          <li style="font-size: 0.875rem; color: #334155; line-height: 1.6;">{{ rec }}</li>
+          <li class="rec-item">
+            <span class="rec-icon">
+              {% if rec.icon == 'check' %}✓
+              {% elif rec.icon == 'warning' %}✳
+              {% else %}🗓
+              {% endif %}
+            </span>
+            {{ rec.text }}
+          </li>
           {% endfor %}
-        </ol>
+        </ul>
       </div>
 
-      <div class="card mt-4">
-        <h4 class="mb-3">Next Steps</h4>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <a href="{% url 'assessment:form' %}" class="btn btn-primary" style="justify-content: center;">
-            Re-take Assessment
+      <!-- Next Steps -->
+      <div class="card">
+        <h3 class="mb-3">Next Steps</h3>
+        <div class="next-steps">
+          <a href="{% url 'chatbot:chat' %}" class="btn btn-primary" style="justify-content:center;">
+            💬 Ask the Chatbot
           </a>
-          <a href="{% url 'chatbot:chat' %}" class="btn btn-outline" style="justify-content: center;">
-            Ask AI Assistant
-          </a>
-          <a href="{% url 'doctors:list' %}" class="btn btn-ghost" style="justify-content: center;">
-            Find a Specialist
+          <a href="{% url 'doctors:list' %}" class="btn btn-outline" style="justify-content:center;">
+            ➕ Find a Doctor
           </a>
         </div>
       </div>
-    </aside>
+
+    </div>
   </div>
 
 </section>

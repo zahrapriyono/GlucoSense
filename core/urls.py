@@ -25,4 +25,5 @@ urlpatterns = [
     path('learn/', include('knowledge.urls')),
     path('doctors/', include('doctors.urls')),
     path('profile/', include('dashboard.urls')),
+    path('auth/', include('accounts.urls')),
 ]
