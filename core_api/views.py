@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
+from datetime import datetime
 from .auth import (generate_token, jwt_required)
 from .utils import (
     parse_json_body,
@@ -198,7 +199,20 @@ def create_glucose_log(request):
             status=400
         )
 
-    sugar_level = body.get("sugar_level")
+    try:
+        sugar_level = float(body.get("sugar_level"))
+    except (TypeError, ValueError):
+        return error_response(
+            "Sugar level must be a valid number.",
+            status=400
+        )
+
+    if sugar_level <= 0:
+        return error_response(
+            "Sugar level must be greater than 0.",
+            status=400
+        )
+    
     log_context = body.get("log_context")
     logged_at = body.get("logged_at")
 
@@ -247,9 +261,34 @@ def update_glucose_log(request):
         )
 
     log_id = body.get("log_id")
-    sugar_level = body.get("sugar_level")
+
+    try:
+        sugar_level = float(body.get("sugar_level"))
+    except (TypeError, ValueError):
+        return error_response(
+            "Sugar level must be a valid number.",
+            status=400
+        )
+
+    if sugar_level <= 0:
+        return error_response(
+            "Sugar level must be greater than 0.",
+            status=400
+        )
+    
     log_context = body.get("log_context")
     logged_at = body.get("logged_at")
+
+    try:
+        logged_at = datetime.strptime(
+            logged_at,
+            "%Y-%m-%d %H:%M:%S"
+        )
+    except (TypeError, ValueError):
+        return error_response(
+            "Logged at must use format YYYY-MM-DD HH:MM:SS.",
+            status=400
+        )
 
     medical_profile = get_medical_profile(request.user)
 
@@ -418,7 +457,21 @@ def create_food_log(request):
         )
 
     food_name = body.get("food_name")
-    estimated_carbs = body.get("estimated_carbs")
+
+    try:
+        estimated_carbs = float(body.get("estimated_carbs"))
+    except (TypeError, ValueError):
+        return error_response(
+            "Estimated carbohydrates must be a valid number.",
+            status=400
+        )
+
+    if estimated_carbs <= 0:
+        return error_response(
+            "Estimated carbohydrates must be greater than 0.",
+            status=400
+        )
+    
     logged_at = body.get("logged_at")
 
     medical_profile = get_medical_profile(request.user)
@@ -468,8 +521,33 @@ def update_food_log(request):
 
     log_id = body.get("log_id")
     food_name = body.get("food_name")
-    estimated_carbs = body.get("estimated_carbs")
+
+    try:
+        estimated_carbs = float(body.get("estimated_carbs"))
+    except (TypeError, ValueError):
+        return error_response(
+            "Estimated carbohydrates must be a valid number.",
+            status=400
+        )
+
+    if estimated_carbs <= 0:
+        return error_response(
+            "Estimated carbohydrates must be greater than 0.",
+            status=400
+        )
+    
     logged_at = body.get("logged_at")
+
+    try:
+        logged_at = datetime.strptime(
+            logged_at,
+            "%Y-%m-%d %H:%M:%S"
+        )
+    except (TypeError, ValueError):
+        return error_response(
+            "Logged at must use format YYYY-MM-DD HH:MM:SS.",
+            status=400
+        )
 
     medical_profile = get_medical_profile(request.user)
 
