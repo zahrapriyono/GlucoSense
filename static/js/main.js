@@ -4,6 +4,8 @@
  * navbar scroll state, scroll-to-top, counter animation
  */
 
+console.log("main.js loaded");
+
 /* ================================================
    1. SCROLL REVEAL (IntersectionObserver)
    ================================================ */
@@ -156,6 +158,25 @@ function applyRevealToElements() {
 }
 
 /* ================================================
+   10. AUTH MENU
+   ================================================ */
+function initAuthMenu() {
+    const authMenu = document.getElementById('auth-menu');
+
+    if(!authMenu) return;
+
+    const token = localStorage.getItem('token');
+
+    if(token) {
+        authMenu.innerHTML = `
+            <a href="/profile/" class="navbar__profile">
+                👤
+            </a>
+        `;
+    }
+}
+
+/* ================================================
    INIT
    ================================================ */
 document.addEventListener('DOMContentLoaded', () => {
@@ -168,4 +189,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initHamburger();
     initFilterTags();
     initProfileTabs();
+    initAuthMenu();
 });

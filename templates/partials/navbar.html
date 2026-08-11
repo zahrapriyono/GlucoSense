@@ -33,9 +33,12 @@
 
     <!-- Right side: Profile + Hamburger -->
     <div class="flex items-center gap-4">
-        <a href="{% url 'accounts:login' %}" class="navbar__profile">
-            🔒 Sign In
-        </a>
+        <div id="auth-menu">
+            <a href="{% url 'accounts:login' %}" class="navbar__profile">
+                🔒 Sign In
+            </a>
+        </div>
+        
         <button class="nav__hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
     </div>
 </div>
