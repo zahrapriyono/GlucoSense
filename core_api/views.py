@@ -1136,7 +1136,7 @@ def login_api(request):
         return body
 
     required_fields = [
-        "username",
+        "email",
         "password",
     ]
 
@@ -1151,11 +1151,22 @@ def login_api(request):
             status=400
         )
 
-    username = body.get("username")
+    email = body.get("email")
     password = body.get("password")
 
+    try:
+        user_obj = User.objects.get(email=email)
+    except User.DoesNotExist:
+        user_obj = None
+
+    if user_obj is None:
+        return error_response(
+            "Invalid email or password.",
+            status=401
+        )
+
     user = authenticate(
-        username=username,
+        username = user_obj.username,
         password=password,
     )
 

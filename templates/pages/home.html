@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}GlucoSense - Take Control of Your Health{% endblock %}
+{% block meta_description %}AI-powered diabetes risk screening. Get your personalized risk profile in minutes.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- SECTION 1: Hero -->
+<section class="hero section">
+    <div class="container hero__inner">
+        <div class="hero__text">
+            <span class="badge badge-green mb-4">🌍 Global Health Awareness</span>
+            <h1>Take Control of <span class="text-primary">Your Health.</span></h1>
+            <p class="hero__desc">
+                Diabetes affects over <strong>400 million people</strong> globally.
+                Understanding your risk is the first step toward a healthier future.
+            </p>
+            <div class="flex gap-4 mt-8">
+                <a href="{% url 'assessment:form' %}" class="btn btn-primary btn-lg">Assess Your Risk →</a>
+                <a href="#how-it-works" class="btn btn-outline btn-lg">How it Works</a>
+            </div>
+            <!-- Animated counters -->
+            <div class="hero__stats">
+                <div class="hero__stat-item">
+                    <div class="hero__stat-number"><span data-count="50">0</span>K+</div>
+                    <div class="hero__stat-label">Users Screened</div>
+                </div>
+                <div class="hero__stat-item">
+                    <div class="hero__stat-number"><span data-count="94">0</span>%</div>
+                    <div class="hero__stat-label">Accuracy Rate</div>
+                </div>
+                <div class="hero__stat-item">
+                    <div class="hero__stat-number"><span data-count="21">0</span></div>
+                    <div class="hero__stat-label">BRFSS Features</div>
+                </div>
+            </div>
+        </div>
+        <div class="hero__image">
+            <div class="hero__image-circle">
+                <img src="https://images.unsplash.com/photo-1559757175-5700dde675bc?w=500&auto=format&fit=crop"
+                     alt="Healthcare illustration">
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- SECTION 2: Feature Cards (3 Cards) -->
+<section class="features section-sm">
+    <div class="container grid-3">
+
+        <!-- Card 1: Risk Assessment -->
+        <div class="card feature-card">
+            <div class="feature-card__icon">🩺</div>
+            <h3>Risk Assessment Tool</h3>
+            <p>Clinically validated screening to identify your specific risk factors.</p>
+            <a href="{% url 'assessment:form' %}" class="text-primary font-semibold text-sm mt-4">
+                Get Started →
+            </a>
+        </div>
+
+        <!-- Card 2: AI Chatbot (highlighted) -->
+        <div class="card feature-card feature-card--primary">
+            <div class="feature-card__icon">🤖</div>
+            <h3>Ask our AI Chatbot</h3>
+            <p>Get immediate answers to your diabetes-related questions 24/7.</p>
+            <a href="{% url 'chatbot:chat' %}" class="font-semibold text-sm mt-4"
+               style="color: rgba(255,255,255,0.9)">
+                Start Chatting →
+            </a>
+        </div>
+
+        <!-- Card 3: Find a Specialist -->
+        <div class="card feature-card">
+            <div class="feature-card__icon">👨‍⚕️</div>
+            <h3>Find a Specialist</h3>
+            <p>Connect with certified endocrinologists and dietitians in your area.</p>
+            <a href="{% url 'doctors:list' %}" class="text-primary font-semibold text-sm mt-4">
+                Search Directory →
+            </a>
+        </div>
+
+    </div>
+</section>
+
+<!-- SECTION 3: How it Works -->
+<section class="how-it-works section" id="how-it-works">
+    <div class="container">
+        <h2 class="section-title">How it Works</h2>
+        <p class="section-subtitle">A simple, three-step journey to clarity and proactive management.</p>
+
+        <div class="how-steps mt-12">
+
+            <div class="how-step">
+                <div class="how-step__number">01</div>
+                <div class="how-step__line"></div>
+                <h4>Learn</h4>
+                <p>Educate yourself with clinical resources about glucose levels and symptoms.</p>
+            </div>
+
+            <div class="how-step">
+                <div class="how-step__number">02</div>
+                <div class="how-step__line"></div>
+                <h4>Assess</h4>
+                <p>Take our medically-aligned assessment to receive a personalized risk profile.</p>
+            </div>
+
+            <div class="how-step">
+                <div class="how-step__number">03</div>
+                <h4>Consult</h4>
+                <p>Book a session with a specialist to discuss your results and next steps.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 4: Featured Insights -->
+<section class="insights section">
+    <div class="container">
+        <div class="flex-between mb-8">
+            <div>
+                <h2>Featured Insights</h2>
+                <p>Latest from the GlucoSense Content Hub</p>
+            </div>
+            <a href="{% url 'knowledge:list' %}" class="text-primary font-semibold text-sm">
+                Explore All →
+            </a>
+        </div>
+
+        <div class="grid-3">
+
+            <div class="article-card card">
+                <img src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=400&h=220&auto=format&fit=crop"
+                     alt="Glycemic Index article">
+                <div class="article-card__body">
+                    <span class="badge badge-blue">NUTRITION</span>
+                    <h4>The Glycemic Index: A Complete Guide for Beginners</h4>
+                    <p>Understand how different foods impact your blood sugar levels and how to make smarter choices.</p>
+                    <div class="flex-between mt-4">
+                        <span class="text-xs text-muted">5 min read</span>
+                        <a href="#" class="text-primary font-semibold text-sm">→</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card card">
+                <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=220&auto=format&fit=crop"
+                     alt="Intermittent Fasting article">
+                <div class="article-card__body">
+                    <span class="badge badge-blue">LIFESTYLE</span>
+                    <h4>Intermittent Fasting and Glucose Control</h4>
+                    <p>New research suggests timing might be just as important as what you eat for glucose stability.</p>
+                    <div class="flex-between mt-4">
+                        <span class="text-xs text-muted">8 min read</span>
+                        <a href="#" class="text-primary font-semibold text-sm">→</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-card card">
+                <img src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=400&h=220&auto=format&fit=crop"
+                     alt="Genetic Markers article">
+                <div class="article-card__body">
+                    <span class="badge badge-blue">RESEARCH</span>
+                    <h4>Genetic Markers: Identifying Risk Before Symptoms</h4>
+                    <p>How personalized medicine is changing the way we screen for Type 2 diabetes.</p>
+                    <div class="flex-between mt-4">
+                        <span class="text-xs text-muted">12 min read</span>
+                        <a href="#" class="text-primary font-semibold text-sm">→</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- SECTION 5: Newsletter Banner -->
+<section class="newsletter">
+    <div class="container newsletter__inner">
+        <div class="newsletter__text">
+            <h2>Stay Informed &amp; Proactive</h2>
+            <p>Join 50,000+ others receiving our weekly medical digest and risk-prevention tips.</p>
+        </div>
+        <form class="newsletter__form" onsubmit="return false;">
+            <input class="form-control" type="email" placeholder="Your medical email">
+            <button class="btn btn-primary" type="submit">Subscribe</button>
+        </form>
+    </div>
+</section>
+
+{% endblock %}

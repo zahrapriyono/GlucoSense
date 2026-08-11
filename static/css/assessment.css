@@ -1,0 +1,158 @@
+.assessment-wrapper {
+    background: var(--color-bg);
+    min-height: 100vh;
+}
+
+.assessment-header h1 {
+    font-size: var(--text-4xl);
+    color: var(--color-primary);
+    margin-bottom: var(--sp-3);
+}
+
+.assessment-header p {
+    max-width: 600px;
+    margin: 0 auto;
+    font-size: var(--text-lg);
+}
+
+/* Form card */
+.assessment-form {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: var(--sp-10);
+    margin-bottom: var(--sp-16);
+}
+
+/* Hide/show steps */
+.step.hidden {
+    display: none;
+}
+
+.step h3 {
+    font-size: var(--text-2xl);
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-primary-light);
+    padding-bottom: var(--sp-4);
+}
+
+/* Choice Cards (Activity Level, General Health) */
+.gen-health-cards {
+    display: flex;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+}
+
+.gen-health-cards .choice-card {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+    padding: var(--sp-3);
+    font-size: var(--text-sm);
+    font-weight: 500;
+}
+
+/* Range Slider label */
+.form-label strong {
+    font-size: var(--text-lg);
+}
+
+/* BMI auto-calculate hint */
+.bmi-hint {
+    background: var(--color-primary-light);
+    border-radius: var(--radius-md);
+    padding: var(--sp-3) var(--sp-4);
+    font-size: var(--text-sm);
+    color: var(--color-primary);
+    margin-top: var(--sp-2);
+    display: none;
+}
+
+.bmi-hint.visible {
+    display: block;
+}
+
+/* Step buttons area */
+.step .flex {
+    gap: var(--sp-3);
+    margin-top: var(--sp-4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .assessment-form {
+        padding: var(--sp-6);
+    }
+
+    .assessment-form .grid-2,
+    .assessment-form .grid-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .gen-health-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .hero .container {
+        flex-direction: column;
+    }
+
+    .chat-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .chat-sidebar {
+        display: none;
+    }
+}
+
+/* Probability Gauge */
+.gauge-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0;
+}
+
+.gauge {
+    width: 100%;
+    max-width: 400px;
+    height: 24px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    position: relative;
+}
+
+.gauge__fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 1s ease;
+    min-width: 0%;
+}
+
+.gauge__label {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: white;
+    mix-blend-mode: difference;
+}
+
+/* Result Recommendations */
+.result-recommendations {
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: left;
+}
+
+/* Badge colors not in main.css */
+.badge-yellow { background: #fef3c7; color: #92400e; }
+.badge-red    { background: #fee2e2; color: #991b1b; }

@@ -8,14 +8,15 @@
     <meta name="description" content="{% block meta_description %}GlucoSense - AI-powered diabetes risk assessment{% endblock %}">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Your CSS -->
+    <!-- Global CSS -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animations.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav>
+    <nav class="navbar">
         {% include 'partials/navbar.html' %}
     </nav>
     
@@ -26,7 +27,12 @@
     <footer>
         {% include 'partials/footer.html' %}
     </footer>
-    
+
+    <!-- Scroll to top button -->
+    <button id="scrollTopBtn" class="scroll-top" aria-label="Scroll to top">↑</button>
+
+    <!-- Global JS -->
+    <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>
-</html>
+</html>

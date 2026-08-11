@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile — GlucoSense{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="container section-sm">
+
+  <!-- ── Profile Header ─────────────────────── -->
+  <div class="profile-header card mb-6">
+    <div class="profile-header__left">
+      <div class="profile-avatar">
+        <img src="https://ui-avatars.com/api/?name={{ user.name }}&background=1B3A8A&color=fff&size=128&bold=true"
+             alt="{{ user.name }}">
+      </div>
+      <div>
+        <h1 class="profile-name">{{ user.name }}</h1>
+        <p class="text-sm text-muted mb-3">Member since {{ user.member_since }}</p>
+        <div class="flex gap-2">
+          <span class="badge badge-green">Premium Health Plan</span>
+          <span class="badge badge-blue">Verified Account</span>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="switchTab('settings')">✏️ Edit Profile</button>
+  </div>
+
+  <!-- ── Tabs ───────────────────────────────── -->
+  <div class="profile-tabs mb-6">
+    <button class="profile-tab active" data-tab="health">My Health</button>
+    <button class="profile-tab" data-tab="articles">Saved Articles</button>
+    <button class="profile-tab" data-tab="settings">Account Settings</button>
+  </div>
+
+  <!-- ── Tab: My Health ─────────────────────── -->
+  <div id="tab-health" class="tab-panel">
+    <div class="profile-layout">
+
+      <!-- Left: Chart + Assessments -->
+      <div class="profile-main">
+
+        <!-- Risk Trend Card -->
+        <div class="card mb-6">
+          <div class="flex-between mb-4">
+            <div>
+              <h3>Risk Trend</h3>
+              <p class="text-sm text-muted">Risk scores over the last 6 months</p>
+            </div>
+            <span class="badge badge-green" style="font-size:0.8rem; padding:0.35rem 0.9rem;">📈 Improving</span>
+          </div>
+          <canvas id="riskChart" height="100"></canvas>
+        </div>
+
+        <!-- Recent Assessments -->
+        <h4 class="mb-4">Recent Assessments</h4>
+        {% for a in user.recent_assessments %}
+        <div class="assessment-item mb-3">
+          <div class="flex gap-4 items-center">
+            <span class="text-sm text-muted">{{ a.date }}</span>
+            <span class="risk-badge risk-badge--{% if a.level == 1 %}low{% elif a.level == 2 %}moderate{% else %}high{% endif %}">
+              {{ a.tier }}
+            </span>
+          </div>
+          <div class="flex gap-4 items-center">
+            <span class="text-muted text-sm">{{ a.status }}</span>
+            <a href="{% url 'dashboard:report_detail' a.id %}"
+             class="text-primary text-sm font-semibold">View Details →</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Right: Snapshot sidebar -->
+      <aside class="profile-sidebar">
+        <div class="card">
+          <h3 class="mb-5">Health Snapshot</h3>
+
+          <div class="snapshot-stat">
+            <p class="snapshot-stat__label">TOTAL ASSESSMENTS</p>
+            <p class="snapshot-stat__value" data-count="{{ user.total_assessments }}">{{ user.total_assessments }}</p>
+            <p class="snapshot-stat__sub">completed</p>
+          </div>
+
+          <div class="snapshot-divider"></div>
+
+          <div class="snapshot-stat">
+            <p class="snapshot-stat__label">SAVED RESOURCES</p>
+            <p class="snapshot-stat__value text-green" data-count="{{ user.saved_resources }}">{{ user.saved_resources }}</p>
+            <p class="snapshot-stat__sub">insights saved</p>
+          </div>
+
+          <div class="snapshot-divider"></div>
+
+          <div class="snapshot-stat">
+            <p class="snapshot-stat__label">LAST ASSESSMENT</p>
+            <p class="snapshot-stat__value--date">{{ user.last_assessment }}</p>
+          </div>
+
+          <a href="{% url 'assessment:form' %}" class="btn btn-primary mt-6" style="width:100%; justify-content:center;">
+            + New Assessment
+          </a>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card mt-4">
+          <h4 class="mb-3">Quick Links</h4>
+          <nav class="quick-links">
+            <a href="{% url 'assessment:form' %}" class="quick-link">📋 Take Assessment</a>
+            <a href="{% url 'chatbot:chat' %}" class="quick-link">💬 Ask AI Assistant</a>
+            <a href="{% url 'knowledge:list' %}" class="quick-link">📚 Browse Articles</a>
+            <a href="{% url 'doctors:list' %}" class="quick-link">🏥 Find a Doctor</a>
+          </nav>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- ── Tab: Saved Articles ─────────────────── -->
+  <div id="tab-articles" class="tab-panel hidden">
+    <div class="card text-center" style="padding: 3rem;">
+      <p style="font-size: 2.5rem; margin-bottom: 1rem;">📚</p>
+      <h3 class="mb-2">No saved articles yet</h3>
+      <p class="text-muted mb-4">Browse our knowledge center and save articles for later.</p>
+      <a href="{% url 'knowledge:list' %}" class="btn btn-primary">Browse Articles</a>
+    </div>
+  </div>
+
+  <!-- ── Tab: Account Settings ──────────────── -->
+  <div id="tab-settings" class="tab-panel hidden">
+    <div class="card">
+      <h3 class="mb-6">Account Settings</h3>
+      <div class="grid-2 gap-6">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-control" type="text" value="{{ user.name }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-control" type="email" placeholder="alex@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          <input class="form-control" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number</label>
+          <input class="form-control" type="tel" placeholder="+1 (555) 000-0000">
+        </div>
+      </div>
+      <div class="mt-6">
+        <button class="btn btn-primary">Save Changes</button>
+        <button class="btn btn-ghost ml-2">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Tab switching
+  function switchTab(name) {
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+    document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+    document.getElementById('tab-' + name).classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.querySelectorAll('.profile-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      this.classList.add('active');
+      document.getElementById('tab-' + this.dataset.tab).classList.remove('hidden');
+    });
+  });
+
+  // Risk Trend Chart
+  const ctx = document.getElementById('riskChart');
+  if (ctx) {
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Today'],
+        datasets: [{
+          label: 'Risk Score',
+          data: [65, 58, 62, 55, 50, 45],
+          borderColor: '#1B3A8A',
+          backgroundColor: 'rgba(27,58,138,0.07)',
+          tension: 0.45,
+          fill: true,
+          pointBackgroundColor: '#1B3A8A',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: { duration: 1200, easing: 'easeOutCubic' },
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            display: true,
+            min: 0, max: 100,
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { color: '#94A3B8', font: { size: 11 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#94A3B8', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

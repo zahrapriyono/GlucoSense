@@ -1,0 +1,41 @@
+{% load static %}
+<div class="navbar__inner">
+    <!-- Logo -->
+    <a href="{% url 'pages:home' %}" class="navbar__logo">Gluco<span style="color:#16A34A">Sense</span></a>
+
+    <!-- Navigation Links -->
+    <ul class="navbar__links">
+        <li>
+            <a href="{% url 'knowledge:list' %}"
+               class="navbar__link {% if request.resolver_match.app_name == 'knowledge' %}active{% endif %}">
+                Learn
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'assessment:form' %}"
+               class="navbar__link {% if request.resolver_match.app_name == 'assessment' %}active{% endif %}">
+                Assessment
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'chatbot:chat' %}"
+               class="navbar__link {% if request.resolver_match.app_name == 'chatbot' %}active{% endif %}">
+                Chatbot
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'doctors:list' %}"
+               class="navbar__link {% if request.resolver_match.app_name == 'doctors' %}active{% endif %}">
+                Find a Doctor
+            </a>
+        </li>
+    </ul>
+
+    <!-- Right side: Profile + Hamburger -->
+    <div class="flex items-center gap-4">
+        <a href="{% url 'accounts:login' %}" class="navbar__profile">
+            🔒 Sign In
+        </a>
+        <button class="nav__hamburger" id="hamburgerBtn" aria-label="Toggle menu">☰</button>
+    </div>
+</div>
