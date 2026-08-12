@@ -679,6 +679,8 @@ def get_medical_profile_api(request):
             "target_sugar_high": medical_profile.targetSugarHigh,
             "birth_date": medical_profile.birthDate,
             "weight_kg": medical_profile.weightKg,
+            "email": request.user.email,
+            "member_since": request.user.date_joined.strftime("%B %Y"),
         },
         status=200
     )

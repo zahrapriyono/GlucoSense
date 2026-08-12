@@ -24,6 +24,21 @@
     border: 3px solid var(--color-primary-light);
     box-shadow: 0 0 0 4px rgba(27,58,138,0.08);
 }
+
+.profile-avatar span {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--color-primary);
+    color: white;
+
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
 .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .profile-name {

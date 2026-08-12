@@ -14,16 +14,17 @@
   <div class="profile-header card mb-6">
     <div class="profile-header__left">
       <div class="profile-avatar">
-        <img src="https://ui-avatars.com/api/?name={{ user.name }}&background=1B3A8A&color=fff&size=128&bold=true"
-             alt="{{ user.name }}">
+        <span id="profileInitials">--</span>
       </div>
       <div>
-        <h1 class="profile-name">{{ user.name }}</h1>
-        <p class="text-sm text-muted mb-3">Member since {{ user.member_since }}</p>
-        <div class="flex gap-2">
+        <h1 class="profile-name" id="profileName">Loading...</h1>
+        <p class="text-sm text-muted mb-3">
+          Member since <span id="memberSince">Loading...</span>
+        </p>
+        <!-- <div class="flex gap-2">
           <span class="badge badge-green">Premium Health Plan</span>
           <span class="badge badge-blue">Verified Account</span>
-        </div>
+        </div> -->
       </div>
     </div>
     <button class="btn btn-primary" onclick="switchTab('settings')">✏️ Edit Profile</button>
@@ -134,28 +135,82 @@
   <div id="tab-settings" class="tab-panel hidden">
     <div class="card">
       <h3 class="mb-6">Account Settings</h3>
-      <div class="grid-2 gap-6">
-        <div class="form-group">
-          <label class="form-label">Full Name</label>
-          <input class="form-control" type="text" value="{{ user.name }}">
+      <form id="profileForm">
+        <div class="grid-2 gap-6">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input 
+              class="form-control" 
+              type="text" 
+              id="fullNameInput"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input 
+              class="form-control" 
+              type="email" 
+              id="emailInput"
+              readonly
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date of Birth</label>
+            <input 
+              class="form-control" 
+              type="date" 
+              id="birthDateInput"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label">Diabetes Type</label>
+
+            <select class="form-control" id="diabetesTypeInput">
+              <option value="Type 1">Type 1</option>
+              <option value="Type 2">Type 2</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Weight (Kg)</label>
+
+            <input 
+              class="form-control" 
+              type="number"
+              step="0.01"
+              id="weightInput"
+            >
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Sugar Low (mg/dL)</label>
+
+            <input
+              class="form-control"
+              type="number"
+              id="targetSugarLowInput"
+            >
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Target Sugar High (mg/dL)</label>
+
+            <input
+              class="form-control"
+              type="number"
+              id="targetSugarHighInput"
+            >
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Email Address</label>
-          <input class="form-control" type="email" placeholder="alex@example.com">
+        <div class="mt-6">
+          <button type="submit" class="btn btn-primary">
+            Save Changes
+          </button>
+
+          <button type="button" class="btn btn-ghost ml-2" id="cancelProfileBtn">
+            Cancel
+          </button>
         </div>
-        <div class="form-group">
-          <label class="form-label">Date of Birth</label>
-          <input class="form-control" type="date">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Phone Number</label>
-          <input class="form-control" type="tel" placeholder="+1 (555) 000-0000">
-        </div>
-      </div>
-      <div class="mt-6">
-        <button class="btn btn-primary">Save Changes</button>
-        <button class="btn btn-ghost ml-2">Cancel</button>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -165,6 +220,126 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+  async function loadMedicalProfile() {
+    const token = localStorage.getItem('token');
+
+    if(!token) {
+      console.error('Authentication token not found.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/medical-profile/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      console.log('Medical profile status:', response.status);
+      console.log('Medical profile data:', result);
+
+      if(!response.ok) {
+        console.error('Failed to load medical profile:', result);
+        return;
+      }
+
+      const profile = result.data;
+
+      const initials = profile.full_name
+        .trim()
+        .split(/\s+/)
+        .map(name => name[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase()
+
+      document.getElementById('profileInitials').textContent = initials;
+
+      document.getElementById('profileName').textContent =
+          profile.full_name;
+
+      document.getElementById('memberSince').textContent =
+        profile.member_since;
+
+      document.getElementById('fullNameInput').value =
+        profile.full_name;
+
+      document.getElementById('emailInput').value =
+        profile.email;
+
+      document.getElementById('birthDateInput').value =
+        profile.birth_date;
+
+      document.getElementById('diabetesTypeInput').value =
+        profile.diabetes_type;
+
+      document.getElementById('weightInput').value =
+        profile.weight_kg;
+
+      document.getElementById('targetSugarLowInput').value =
+        profile.target_sugar_low;
+
+      document.getElementById('targetSugarHighInput').value =
+        profile.target_sugar_high;
+
+    } catch (error) {
+      console.error('Error loading medical profile:', error);
+    }
+  }
+
+  async function updateMedicalProfile(event) {
+    event.preventDefault();
+
+    const token = localStorage.getItem('token');
+
+    if(!token) {
+      console.error('Authentication token not found.');
+      return;
+    }
+
+    const body = {
+      full_name: document.getElementById('fullNameInput').value,
+      diabetes_type: document.getElementById('diabetesTypeInput').value,
+      target_sugar_low: document.getElementById('targetSugarLowInput').value,
+      target_sugar_high: document.getElementById('targetSugarHighInput').value,
+      birth_date: document.getElementById('birthDateInput').value,
+      weight_kg: document.getElementById('weightInput').value
+    };
+
+    console.log('PUT body:', body);
+
+    try {
+      const response = await fetch('/api/medical-profile/', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      const result = await response.json();
+
+      console.log('Update status:', response.status);
+      console.log('Update response:', result);
+
+      if(!response.ok) {
+        console.error('Failed to update medical profile.', result);
+        return;
+      }
+
+      console.log('Medical profile updated successfully.');
+
+      await loadMedicalProfile();
+
+    } catch (error) {
+      console.error('Error updating medical profile.', error);
+    }
+  }
   // Tab switching
   function switchTab(name) {
     document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
@@ -223,5 +398,20 @@
       }
     });
   }
+
+  document.getElementById('profileForm').addEventListener(
+    'submit',
+    updateMedicalProfile
+  );
+
+  document.getElementById('cancelProfileBtn').addEventListener('click', async function () {
+    await loadMedicalProfile();
+
+    switchTab('health');
+  })
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadMedicalProfile();
+  });
 </script>
 {% endblock %}
