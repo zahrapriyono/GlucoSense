@@ -87,9 +87,15 @@
     // Tampilkan result card
     document.getElementById('resultCard').style.removeProperty('display');
 
-    const prob     = Math.round(resultData.probability || 0);
-    const tier     = resultData.tier || 'Unknown';
+    const assessment = resultData.data;
+
+    const prob     = assessment.probability || 0;
+    const tier     = assessment.tier || 'Unknown';
     const probText = `${prob}%`;
+
+    console.log("Assessment result:", assessment);
+    console.log("Probability:", prob);
+    console.log("Tier:", tier);
 
     // Map tier ke warna, icon, dan deskripsi
     const tierConfig = {

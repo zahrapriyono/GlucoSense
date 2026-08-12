@@ -1,3 +1,5 @@
+console.log("assessment.js loaded");
+
 let currentStep = 1;
 const totalSteps = 3;
 
@@ -28,6 +30,8 @@ function prevStep() {
 }
 
 async function submitAssessment(event) {
+    console.log("submitAssessment() called");
+
     const btn = event.target;
     const originalText = btn.textContent;
 
@@ -36,30 +40,44 @@ async function submitAssessment(event) {
     btn.disabled = true;
 
     try {
+        const token = localStorage.getItem('token');
+
+        if(!token) {
+            throw new Error('Authentication token not found.')
+        }
         const formData = collectFormData();
 
-        const response = await fetch('/assessment/submit/', {
+        console.log("Assessment form data:", formData);
+
+        console.log("Sending assessment request...");
+        
+        const response = await fetch('/api/assessment/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify(formData)
         });
 
+        const result = await response.json();
+
+        console.log('Assessment status:', response.status);
+        console.log('Assessment result:', result);
+
         if (!response.ok) {
-            throw new Error(`Server responded ${response.status}`);
+            throw new Error(result.message || `Server responded ${response.status}`);
         }
 
-        const result = await response.json();
         sessionStorage.setItem('assessmentResult', JSON.stringify(result));
         window.location.href = '/assessment/result/';
 
     } catch (err) {
+        console.error('Assessment error:', err);
         // Reset button jika error
         btn.textContent = originalText;
         btn.disabled = false;
-        alert('Something went wrong. Please try again.');
+        alert(err.message || 'Something went wrong. Please try again.');
     }
 }
 
@@ -71,12 +89,13 @@ function collectFormData() {
         sex: document.querySelector('[name=sex]').value,
         weight: document.getElementById('weight').value,
         height: document.getElementById('height').value,
-        activity_level: document.querySelector('.choice-card.selected[data-group="activity_level"]')?.value,
+        activity_level: document.querySelector('.choice-card.selected[data-group="activity_level"]')?.dataset.value,
 
         // Step 2 - Medical History
         high_cholesterol: document.querySelector('input[name=high_cholesterol]:checked')?.value,
         cholesterol_check_5yr: document.querySelector('input[name=cholesterol_check_5yr]:checked')?.value,
-        heart_disease: document.querySelector('input[name=heart_diesease]:checked')?.value,
+        stroke: document.querySelector('input[name=stroke]:checked')?.value,
+        heart_disease: document.querySelector('input[name=heart_disease]:checked')?.value,
         difficulty_walking: document.querySelector('input[name=difficulty_walking]:checked')?.value,
 
         // Step 3 - Lifestyle & Wellbeing
