@@ -58,21 +58,10 @@
 
         <!-- Recent Assessments -->
         <h4 class="mb-4">Recent Assessments</h4>
-        {% for a in user.recent_assessments %}
-        <div class="assessment-item mb-3">
-          <div class="flex gap-4 items-center">
-            <span class="text-sm text-muted">{{ a.date }}</span>
-            <span class="risk-badge risk-badge--{% if a.level == 1 %}low{% elif a.level == 2 %}moderate{% else %}high{% endif %}">
-              {{ a.tier }}
-            </span>
-          </div>
-          <div class="flex gap-4 items-center">
-            <span class="text-muted text-sm">{{ a.status }}</span>
-            <a href="{% url 'dashboard:report_detail' a.id %}"
-             class="text-primary text-sm font-semibold">View Details →</a>
-          </div>
+
+        <div id="assessmentHistory">
+          <p class="text-muted">Loading assessment...</p>
         </div>
-        {% endfor %}
       </div>
 
       <!-- Right: Snapshot sidebar -->
@@ -82,7 +71,7 @@
 
           <div class="snapshot-stat">
             <p class="snapshot-stat__label">TOTAL ASSESSMENTS</p>
-            <p class="snapshot-stat__value" data-count="{{ user.total_assessments }}">{{ user.total_assessments }}</p>
+            <p class="snapshot-stat__value" id="totalAssessments">0</p>
             <p class="snapshot-stat__sub">completed</p>
           </div>
 
@@ -90,7 +79,7 @@
 
           <div class="snapshot-stat">
             <p class="snapshot-stat__label">SAVED RESOURCES</p>
-            <p class="snapshot-stat__value text-green" data-count="{{ user.saved_resources }}">{{ user.saved_resources }}</p>
+            <p class="snapshot-stat__value text-green" id="savedResources">0</p>
             <p class="snapshot-stat__sub">insights saved</p>
           </div>
 
@@ -98,7 +87,7 @@
 
           <div class="snapshot-stat">
             <p class="snapshot-stat__label">LAST ASSESSMENT</p>
-            <p class="snapshot-stat__value--date">{{ user.last_assessment }}</p>
+            <p class="snapshot-stat__value--date" id="lastAssessment">-</p>
           </div>
 
           <a href="{% url 'assessment:form' %}" class="btn btn-primary mt-6" style="width:100%; justify-content:center;">
@@ -291,6 +280,136 @@
     }
   }
 
+  function formatAssessmentDate(dateString) {
+    if (!dateString) {
+      return '-';
+    }
+
+    const date = new Date(dateString);
+
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: '2-digit',
+      year: 'numeric'
+    });
+  }
+
+  async function loadAssessmentHistory() {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.error('Authentication token not found.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/assessment/history/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      console.log('Assessment history status:', response.status);
+      console.log('Assessment history data:', result);
+
+      if (!response.ok) {
+        console.error('Failed to load assessment history:', result);
+        return;
+      }
+
+      const assessments = result.data;
+
+      console.log('FIRST ASSESSMENT:', assessments[0]);
+      console.log('CREATED AT:', assessments[0]?.createdAt);
+      console.log('AVAILABLE KEYS:', Object.keys(assessments[0]));
+
+      const historyContainer = document.getElementById('assessmentHistory');
+
+      if (!assessments || assessments.length === 0) {
+        historyContainer.innerHTML = `
+          <p class="text-muted">
+            No assessments completed yet.
+          </p>
+        `;
+
+        document.getElementById('totalAssessments').textContent = '0';
+        document.getElementById('lastAssessment').textContent = '-';
+
+        return;
+      }
+
+      // ==============================
+      // TOTAL ASSESSMENTS
+      // ==============================
+
+      document.getElementById('totalAssessments').textContent = assessments.length;
+
+      // ==============================
+      // LAST ASSESSMENT
+      // ==============================
+
+      const latestAssessment = assessments[0];
+
+      document.getElementById('lastAssessment').textContent = formatAssessmentDate(latestAssessment.created_at);
+
+
+      // ==============================
+      // RECENT ASSESSMENTS
+      // ==============================
+
+      historyContainer.innerHTML = assessments.map(assessment => {
+
+        let riskClass;
+
+        if (assessment.level === 1) {
+          riskClass = 'low';
+        } else if (assessment.level === 2) {
+          riskClass = 'moderate';
+        } else {
+          riskClass = 'high';
+        }
+
+        return `
+          <div class="assessment-item mb-3">
+
+            <div class="flex gap-4 items-center">
+
+              <span class="text-sm text-muted">
+                ${formatAssessmentDate(assessment.created_at)}
+              </span>
+
+              <span class="risk-badge risk-badge--${riskClass}">
+                ${assessment.tier}
+              </span>
+
+            </div>
+
+            <div class="flex gap-4 items-center">
+
+              <span class="text-muted text-sm">
+                ${assessment.probability}%
+              </span>
+
+              <a href="/profile/report/${assessment.id}/" class="text-primary text-sm font-semibold">View Details →</a>
+
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+    } catch (error) {
+      console.error(
+        'Error loading assessment history:',
+        error
+      );
+    }
+  }
+
   async function updateMedicalProfile(event) {
     event.preventDefault();
 
@@ -412,6 +531,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     loadMedicalProfile();
+    loadAssessmentHistory();
   });
 </script>
 {% endblock %}

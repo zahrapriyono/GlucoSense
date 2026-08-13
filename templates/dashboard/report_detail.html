@@ -14,7 +14,7 @@
   Always consult a healthcare professional.
 </div>
 
-<section class="container section-sm">
+<section id="reportPage" class="container section-sm" data-report-id="{{ report_id }}">
 
   <!-- Back link -->
   <a href="{% url 'dashboard:profile' %}" style="font-size:0.875rem; color:#64748B; display:inline-flex; align-items:center; gap:0.4rem; margin-bottom:1.5rem;">
@@ -25,10 +25,10 @@
   <div class="report-header">
     <div>
       <h1 class="report-title">Assessment Results</h1>
-      <p class="report-date">Taken on {{ report.date }}</p>
+      <p id="reportDate" class="report-date">Loading...</p>
     </div>
-    <span class="risk-pill risk-pill--{% if report.level == 1 %}low{% elif report.level == 2 %}moderate{% else %}high{% endif %}">
-      ✅ {{ report.tier }} (Level {{ report.level }})
+    <span id="riskPill" class="risk-pill">
+      Loading...
     </span>
   </div>
 
@@ -99,4 +99,59 @@
   </div>
 
 </section>
+{% endblock %}
+{% block extra_js %}
+<script>
+  async function loadAssessmentDetail() {
+    const reportPage = document.getElementById('reportPage');
+    const reportId = reportPage.dataset.reportId;
+
+    console.log('Assessment ID:', reportId);
+
+    const token = localStorage.getItem('token');
+
+    if(!token) {
+      console.error('Authentication token not found.');
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/assessment/${reportId}/`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const result = await response.json();
+
+      console.log('Assessment detail status:', response.status);
+      console.log('Assessment detail response:', result);
+
+      if(!response.ok) {
+        console.error('Failed to load assessment detail:', result);
+        return;
+      }
+
+      const assessment = result.data;
+
+      console.log('Assessment data:', assessment);
+
+      document.querySelector('.report-date').textContent = assessment.created_at;
+
+      document.querySelector('.risk-pill').textContent = `${assessment.tier} (Level ${assessment.level})`;
+      
+    } catch (error) {
+      console.error('Error loading assessment detail:', error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAssessmentDetail();
+  });
+</script>
 {% endblock %}

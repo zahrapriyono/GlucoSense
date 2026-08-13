@@ -46,8 +46,16 @@ def predict_risk(form_data: dict) -> dict:
         tier = 'Moderate'
     else:
         tier = 'High'
+
+    if tier == 'Low':
+        level = 1
+    elif tier == 'Moderate':
+        level = 2
+    else:
+        level = 3
     
     return {
         'probability': round(float(proba) * 100, 1),
         'tier': tier,
+        'level': level,
     }

@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.contrib.auth.decorators import login_required
 from assessment.ml.predictor import predict_risk
 from datetime import datetime
 from .auth import (generate_token, jwt_required)
@@ -21,6 +22,7 @@ from .models import (
     FoodLog,
     FavoriteDoctor,
     ChatHistory,
+    Assessment,
 )
 
 from chatbot.rag import get_response
@@ -1230,33 +1232,32 @@ def convert_to_model_format(data):
 
     return {
         'HighBP':               high_bp,
-        'HighChol':             int(data.get('high_cholesterol', 0) or 0),   # FIX: high_col → high_cholesterol
-        'CholCheck':            int(data.get('cholesterol_check_5yr', 1) or 1), # FIX: chol_check → cholesterol_check_5yr
+        'HighChol':             int(data.get('high_cholesterol', 0) or 0),
+        'CholCheck':            int(data.get('cholesterol_check_5yr', 1) or 1),
         'BMI':                  bmi,
-        'Smoker':               int(data.get('smoking_status', 0) or 0),     # FIX: smoker → smoking_status
+        'Smoker':               int(data.get('smoking_status', 0) or 0),    
         'Stroke':               int(data.get('stroke', 0) or 0),
-        'HeartDiseaseorAttack': int(data.get('heart_disease', 0) or 0),      # FIX: typo HeartDiseaseAttack
+        'HeartDiseaseorAttack': int(data.get('heart_disease', 0) or 0),     
         'PhysActivity':         phys_activity,
-        'Fruits':               int(data.get('eat_fruits', 1) or 1),         # FIX: fruits → eat_fruits
-        'Veggies':              int(data.get('eat_vegetables', 1) or 1),     # FIX: veggies → eat_vegetables
-        'HvyAlcoholConsump':    int(data.get('heavy_alcohol', 0) or 0),      # FIX: typo heavy_alcohhol
-        'AnyHealthcare':        int(data.get('health_insurance', 1) or 1),   # FIX: any_healthcare → health_insurance
-        'NoDocbcCost':          int(data.get('skipped_doctor_cost', 0) or 0), # FIX: no_doc_cost → skipped_doctor_cost
-        'GenHlth':              int(data.get('general_health', 3) or 3),     # FIX: gen_health → general_health
-        'MentHlth':             int(data.get('poor_mental_health_days', 0) or 0),   # FIX field name
-        'PhysHlth':             int(data.get('poor_physical_health_days', 0) or 0), # FIX field name
-        'DiffWalk':             int(data.get('difficulty_walking', 0) or 0), # FIX: diff_walk → difficulty_walking
+        'Fruits':               int(data.get('eat_fruits', 1) or 1),    
+        'Veggies':              int(data.get('eat_vegetables', 1) or 1),     
+        'HvyAlcoholConsump':    int(data.get('heavy_alcohol', 0) or 0), 
+        'AnyHealthcare':        int(data.get('health_insurance', 1) or 1),
+        'NoDocbcCost':          int(data.get('skipped_doctor_cost', 0) or 0),
+        'GenHlth':              int(data.get('general_health', 3) or 3),
+        'MentHlth':             int(data.get('poor_mental_health_days', 0) or 0),  
+        'PhysHlth':             int(data.get('poor_physical_health_days', 0) or 0),
+        'DiffWalk':             int(data.get('difficulty_walking', 0) or 0),
         'Sex':                  int(data.get('sex', 0) or 0),
         'Age':                  age_cat,
-        'Education':            int(data.get('education_level', 4) or 4),    # FIX: education → education_level
-        'Income':               int(data.get('income_level', 5) or 5),       # FIX: income → income_level
+        'Education':            int(data.get('education_level', 4) or 4),
+        'Income':               int(data.get('income_level', 5) or 5),    
     }
 
 @csrf_exempt
 @jwt_required
 def submit_assessment_api(request):
-    print("ASSESSMENT API CALLED")
-    
+
     if request.method != 'POST':
         return error_response(
             message="Method not allowed.",
@@ -1272,8 +1273,101 @@ def submit_assessment_api(request):
 
     prediction = predict_risk(form_data)
 
+    assessment = Assessment.objects.create(
+        user=request.user,
+
+        probability=prediction['probability'],
+        tier=prediction['tier'],
+        level=prediction['level'],
+
+        highBP=form_data['HighBP'],
+        highChol=form_data['HighChol'],
+        cholCheck=form_data['CholCheck'],
+        bmi=form_data['BMI'],
+        smoker=form_data['Smoker'],
+        stroke=form_data['Stroke'],
+        heartDiseaseOrAttack=form_data['HeartDiseaseorAttack'],
+        physActivity=form_data['PhysActivity'],
+        fruits=form_data['Fruits'],
+        veggies=form_data['Veggies'],
+        hvyAlcoholConsump=form_data['HvyAlcoholConsump'],
+        anyHealthcare=form_data['AnyHealthcare'],
+        noDocbcCost=form_data['NoDocbcCost'],
+        genHlth=form_data['GenHlth'],
+        mentHlth=form_data['MentHlth'],
+        physHlth=form_data['PhysHlth'],
+        diffWalk=form_data['DiffWalk'],
+        sex=form_data['Sex'],
+        age=form_data['Age'],
+        education=form_data['Education'],
+        income=form_data['Income'],
+    )
+
     return success_response(
         message="Assessment completed successfully.",
         data=prediction,
+        status=200
+    )
+
+@csrf_exempt
+@jwt_required
+def get_assessment_history_api(request):
+    if request.method != 'GET':
+        return error_response(
+            message="Method not allowed.",
+            status=405
+        )
+
+    assessments = Assessment.objects.filter(user=request.user).order_by('-createdAt')
+
+    data = [
+        {
+            "id": assessment.id,
+            "probability": assessment.probability,
+            "tier": assessment.tier,
+            "level": assessment.level,
+            "created_at": assessment.createdAt,
+        }
+        for assessment in assessments
+    ]
+
+    return success_response(
+        message="Assessment history retrieved successfully.",
+        data=data,
+        status=200
+    )
+
+@csrf_exempt
+@jwt_required
+def get_assessment_detail_api(request, assessment_id):
+
+    if request.method != 'GET':
+        return error_response(
+            message="Method not allowed.",
+            status=405
+        )
+
+    try:
+        assessment = Assessment.objects.get(
+            id=assessment_id,
+            user=request.user
+        )
+    except Assessment.DoesNotExist:
+        return error_response(
+            message="Assessment not found.",
+            status=404
+        )
+
+    data = {
+        'id': assessment.id,
+        'probability': assessment.probability,
+        'tier': assessment.tier,
+        'level': assessment.level,
+        'created_at': assessment.createdAt,
+    }
+
+    return success_response(
+        message="Assessment detail retrieved successfully.",
+        data=data,
         status=200
     )

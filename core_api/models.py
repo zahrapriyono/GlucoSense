@@ -58,7 +58,64 @@ class MedicalProfile(models.Model):
 
 
 # ==========================================
-# 3. MODUL TRACKER & INTERAKTIF
+# 3. MODUL ASSESSMENT
+# ==========================================
+
+class Assessment(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='assessments',
+        db_column='userId'
+    )
+
+    # Assessment result
+    probability = models.FloatField(db_column='probability')
+    tier = models.CharField(max_length=20, db_column='tier')
+    level = models.PositiveSmallIntegerField(db_column='level')
+
+    # BRFSS features used by the ML model
+    highBP = models.IntegerField(db_column='HighBP')
+    highChol = models.IntegerField(db_column='HighChol')
+    cholCheck = models.IntegerField(db_column='CholCheck')
+    bmi = models.FloatField(db_column='BMI')
+    smoker = models.IntegerField(db_column='Smoker')
+    stroke = models.IntegerField(db_column='Stroke')
+    heartDiseaseOrAttack = models.IntegerField(
+        db_column='HeartDiseaseorAttack'
+    )
+    physActivity = models.IntegerField(db_column='PhysActivity')
+    fruits = models.IntegerField(db_column='Fruits')
+    veggies = models.IntegerField(db_column='Veggies')
+    hvyAlcoholConsump = models.IntegerField(
+        db_column='HvyAlcoholConsump'
+    )
+    anyHealthcare = models.IntegerField(db_column='AnyHealthcare')
+    noDocbcCost = models.IntegerField(db_column='NoDocbcCost')
+    genHlth = models.IntegerField(db_column='GenHlth')
+    mentHlth = models.IntegerField(db_column='MentHlth')
+    physHlth = models.IntegerField(db_column='PhysHlth')
+    diffWalk = models.IntegerField(db_column='DiffWalk')
+    sex = models.IntegerField(db_column='Sex')
+    age = models.IntegerField(db_column='Age')
+    education = models.IntegerField(db_column='Education')
+    income = models.IntegerField(db_column='Income')
+
+    createdAt = models.DateTimeField(
+        auto_now_add=True,
+        db_column='createdAt'
+    )
+
+    class Meta:
+        db_table = 'assessments'
+        ordering = ['-createdAt']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.tier} Risk ({self.probability}%)"
+
+
+# ==========================================
+# 4. MODUL TRACKER & INTERAKTIF
 # ==========================================
 
 class BloodGlucoseLog(models.Model):
@@ -93,7 +150,7 @@ class FavoriteDoctor(models.Model):
 
 
 # ==========================================
-# 4. MODUL CHATBOT (UNTUK RIWAYAT CHAT ZAZA)
+# 5. MODUL CHATBOT (UNTUK RIWAYAT CHAT ZAZA)
 # ==========================================
 
 class ChatHistory(models.Model):
