@@ -41,23 +41,12 @@
         📊 Factor Breakdown
       </h3>
       <p class="text-muted text-sm mt-2 mb-4">
-        Your results indicate a well-managed lifestyle profile. Below is a detailed view of the individual factors evaluated.
+        Your results indicate a well-managed lifestyle profile.
+        Below is a detailed view of the individual factors evaluated.
       </p>
 
-      <div class="factor-grid">
-        {% for factor in report.risk_factors %}
-        <div class="factor-item">
-          <div class="factor-header">
-            <span class="factor-name">{{ factor.name }}</span>
-            <span class="factor-label factor-label--{{ factor.status }}">{{ factor.label }}</span>
-          </div>
-          <div class="factor-bar-track">
-            <div class="factor-bar-fill factor-bar-fill--{{ factor.status }}"
-                 style="width: {{ factor.bar }}%"></div>
-          </div>
-          <span class="factor-value">{{ factor.value }}</span>
-        </div>
-        {% endfor %}
+      <div class="factor-grid" id="factorGrid">
+        <p class="text-muted">Loading factors...</p>
       </div>
     </div>
 
@@ -67,18 +56,10 @@
       <!-- Recommendations -->
       <div class="card">
         <h3 class="rec-title">📍 Recommendations</h3>
-        <ul class="rec-list">
-          {% for rec in report.recommendations %}
-          <li class="rec-item">
-            <span class="rec-icon">
-              {% if rec.icon == 'check' %}✓
-              {% elif rec.icon == 'warning' %}✳
-              {% else %}🗓
-              {% endif %}
-            </span>
-            {{ rec.text }}
+        <ul class="rec-list" id="recommendationList">
+          <li class="rec-item text-muted">
+            Loading recomendations...
           </li>
-          {% endfor %}
         </ul>
       </div>
 
@@ -102,6 +83,77 @@
 {% endblock %}
 {% block extra_js %}
 <script>
+  function renderRiskFactors(factors) {
+    const factorGrid = document.getElementById('factorGrid');
+
+    if(!factors || factors.length === 0) {
+      factorGrid.innerHTML = `
+        <p class="text-muted">
+          No risk factor information available.
+        </p>
+      `;
+      return;
+    }
+
+    factorGrid.innerHTML = factors.map(factor => `
+      <div class="factor-item">
+        <div class="factor-header">
+          <span class="factor-name">
+            ${factor.name}
+          </span>
+
+          <span class="factor-label factor-label--${factor.status}">
+            ${factor.label}
+          </span>
+        </div>
+
+        <div class="factor-bar-track">
+          <div class="factor-bar-fill factor-bar-fill--${factor.status}"
+            style="width: ${factor.bar}%">
+          </div>
+        </div>
+
+        <span class="factor-value">
+          ${factor.value}
+        </span>
+      </div>
+    `).join('');
+  }
+
+  function renderRecommendations(recommendations) {
+    const recommendationList = document.getElementById('recommendationList');
+
+    if (!recommendations || recommendations.length === 0) {
+      recommendationList.innerHTML = `
+        <li class="rec-item text-muted">
+          No recommendations available.
+        </li>
+      `;
+      return;
+    }
+
+    recommendationList.innerHTML = recommendations.map(rec => {
+
+      let icon = '🗓';
+
+      if (rec.icon === 'check') {
+        icon = '✓';
+      } else if (rec.icon === 'warning') {
+        icon = '✳';
+      }
+
+      return `
+        <li class="rec-item">
+          <span class="rec-icon">
+            ${icon}
+          </span>
+
+          ${rec.text}
+        </li>
+      `;
+    }).join('');
+  }
+
   async function loadAssessmentDetail() {
     const reportPage = document.getElementById('reportPage');
     const reportId = reportPage.dataset.reportId;
@@ -140,6 +192,10 @@
       const assessment = result.data;
 
       console.log('Assessment data:', assessment);
+
+      renderRiskFactors(assessment.risk_factors);
+
+      renderRecommendations(assessment.recomendations);
 
       document.querySelector('.report-date').textContent = assessment.created_at;
 

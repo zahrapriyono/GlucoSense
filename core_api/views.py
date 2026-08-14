@@ -13,7 +13,7 @@ from .utils import (
     validate_required_fields,
     get_medical_profile,
 )
-
+from dashboard.services import (build_assessment_factors, build_assessment_recommendations)
 from .models import (
     Article,
     Doctor,
@@ -1364,6 +1364,8 @@ def get_assessment_detail_api(request, assessment_id):
         'tier': assessment.tier,
         'level': assessment.level,
         'created_at': assessment.createdAt,
+        'risk_factors': build_assessment_factors(assessment),
+        'recomendations': build_assessment_recommendations(assessment),
     }
 
     return success_response(
