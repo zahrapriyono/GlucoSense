@@ -18,6 +18,33 @@ class Article(models.Model):
     def __str__(self):
         return self.title
 
+class SavedArticle(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='saved_articles',
+        db_column='userId'
+    )
+
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+        related_name='saved_by_users',
+        db_column='articleId'
+    )
+
+    createdAt = models.DateTimeField(
+        auto_now_add=True,
+        db_column='createdAt'
+    )
+
+    class Meta:
+        db_table = 'savedArticles'
+        unique_together = ('user', 'article')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.article.title}"
+
 
 class Doctor(models.Model):
     fullName = models.CharField(max_length=255, db_column='fullName')

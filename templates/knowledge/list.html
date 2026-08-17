@@ -59,21 +59,44 @@
 
   <div class="grid-3" id="articleGrid">
     {% for article in articles %}
-    <div class="article-card card" data-category="{{ article.category|lower }}">
-      <img src="{{ article.image }}" alt="{{ article.title }}">
+    <div 
+        class="article-card card" 
+        data-category="{{ article.category|lower }}"
+        data-article-id="{{ article.id }}"
+    >
+      {% if article.thumbnailUrl %}
+        <img src="{{ article.thumbnailUrl }}" alt="{{ article.title }}">
+      {% endif %}
+
       <div class="article-card__body">
-        <span class="badge badge-blue">{{ article.category }}</span>
+        <span class="badge badge-blue">
+          {{ article.category }}
+        </span>
+
         <h4>{{ article.title }}</h4>
-        <p>{{ article.excerpt }}</p>
+
+        <p>{{ article.content|truncatechars:150 }}</p>
+
         <div class="flex-between mt-4">
-          <span class="text-xs text-muted">⏱ {{ article.read_time }}</span>
-          <a href="{% url 'knowledge:detail' article.slug %}" class="text-primary font-semibold text-sm">Read →</a>
+          <span class="text-xs text-muted">
+            {{ article.createdAt|date:"d M Y" }}
+          </span>
+
+          <div style="display:flex; align-items:center; gap:1rem;">
+            <button
+              type="button"
+              class="save-article-btn"
+              data-article-id="{{ article.id }}"
+            >
+              ♡ Save
+            </button>
+
+            <span class="text-primary font-semibold text-sm">
+              Read Article →
+            </span>
+          </div>
         </div>
       </div>
-    </div>
-    {% empty %}
-    <div style="grid-column: 1/-1; text-align: center; padding: 4rem 0;">
-      <p class="text-muted">No articles found.</p>
     </div>
     {% endfor %}
   </div>
@@ -115,5 +138,114 @@
 
     document.getElementById('resultCount').textContent = `Showing ${visible} article${visible !== 1 ? 's' : ''}`;
   }
+
+  function getCookie(name) {
+    const cookies = document.cookie.split(';');
+
+    for (const cookie of cookies) {
+      const [key, value] = cookie.trim().split('=');
+
+      if (key === name) {
+        return decodeURIComponent(value);
+      }
+    }
+
+    return null;
+  }
+
+  async function saveArticle(articleId, button) {
+    try {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        console.error("JWT token not found.");
+        return;
+      }
+
+      const response = await fetch('/api/saved-articles/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          article_id: articleId
+        })
+      });
+
+      const result = await response.json();
+
+      console.log("Save article status:", response.status);
+      console.log("Save article response:", result);
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save article.');
+      }
+
+      console.log("Article saved successfully.");
+
+      button.innerHTML = '♥ Saved';
+      button.classList.add('saved');
+
+    } catch (error) {
+      console.error('Failed to save article:', error);
+    }
+  }
+
+  async function loadSavedArticles() {
+    const token = localStorage.getItem('token');
+
+    console.log('=== LOAD SAVED ARTICLES ===');
+
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/saved-articles/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Failed to load saved articles:', result);
+        return;
+      }
+
+      const savedArticles = result.data || [];
+
+      savedArticles.forEach(savedArticle => {
+        const button = document.querySelector(
+          `.save-article-btn[data-article-id="${savedArticle.article_id}"]`
+        );
+
+        if (button) {
+          button.innerHTML = '♥ Saved';
+          button.classList.add('saved');
+        }
+      });
+
+    } catch (error) {
+      console.error('Error loading saved articles:', error);
+    }
+  }
+
+  document.querySelectorAll('.save-article-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const articleId = button.dataset.articleId;
+
+      console.log("Button article ID:", articleId);
+
+      saveArticle(articleId, button);
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadSavedArticles();
+  });
 </script>
 {% endblock %}

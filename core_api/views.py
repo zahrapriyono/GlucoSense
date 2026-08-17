@@ -23,6 +23,7 @@ from .models import (
     FavoriteDoctor,
     ChatHistory,
     Assessment,
+    SavedArticle,
 )
 
 from chatbot.rag import get_response
@@ -71,6 +72,122 @@ def get_article_detail(request, article_id):
             "created_at": article.createdAt.strftime("%Y-%m-%d %H:%M:%S"),
         },
         status=200
+    )
+
+def get_saved_articles_api(request):
+
+    saved_articles = SavedArticle.objects.filter(
+        user=request.user
+    ).select_related('article')
+
+    data = []
+
+    for saved in saved_articles:
+        article = saved.article
+
+        data.append({
+            'id': saved.id,
+            'article_id': article.id,
+            'title': article.title,
+            'category': article.category,
+            'thumbnail_url': article.thumbnailUrl,
+            'saved_at': saved.createdAt,
+        })
+
+    return success_response(
+        message='Saved article retrieved successfully.',
+        data=data,
+        status=200
+    )
+
+def save_article_api(request):
+    body = parse_json_body(request)
+
+    if isinstance(body, JsonResponse):
+        return body
+
+    article_id = body.get('article_id')
+
+    if not article_id:
+        return error_response(
+            message='Article ID is required.',
+            status=400
+        )
+
+    try:
+        article = Article.objects.get(id=article_id)
+    except Article.DoesNotExist:
+        return error_response(
+            message='Article not found.',
+            status=404
+        )
+
+    saved_article, created = SavedArticle.objects.get_or_create(
+        user=request.user,
+        article=article
+    )
+
+    if not created:
+        return error_response(
+            message='Article already saved.',
+            status=409
+        )
+
+    return success_response(
+        message="Article saved successfully.",
+        data={
+            'id': saved_article.id,
+            'article_id': article.id,
+            'title': article.title,
+            'saved_at': saved_article.createdAt,
+        },
+        status=201
+    )
+
+@csrf_exempt
+@jwt_required
+def delete_saved_article_api(request, article_id):
+
+    if request.method != 'DELETE':
+        return error_response(
+            message='Method not allowed',
+            status=405
+        )
+    
+    try:
+        saved_article = SavedArticle.objects.get(
+            user=request.user,
+            article_id=article_id
+        )
+    except SavedArticle.DoesNotExist:
+        return error_response(
+            message="Saved article not found.",
+            status=404
+        )
+
+    saved_article.delete()
+
+    return success_response(
+        message="Article removed from saved articles successfully.",
+        data={
+            'article_id': article_id
+        },
+        status=200
+    )
+
+@csrf_exempt
+@jwt_required
+def saved_article_api(request):
+
+    if request.method == 'GET':
+        return get_saved_articles_api(request)
+
+    elif request.method == 'POST':
+        return save_article_api(request)
+
+    return error_response(
+        message='Method not allowed',
+        status=405
     )
 
 

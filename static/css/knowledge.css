@@ -131,6 +131,23 @@
     padding-top: 1rem;
 }
 
+.save-article-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+
+    color: #1e3a8a;
+    font-size: 0.875rem;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.save-article-btn:hover {
+    color: #1d4ed8;
+}
+
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {

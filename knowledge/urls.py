@@ -5,5 +5,5 @@ app_name = 'knowledge'
 
 urlpatterns = [
     path('', views.list_articles, name='list'),
-    path('<slug:slug>/', views.detail, name='detail')
+    path('<int:article_id>/', views.detail, name='detail')
 ]

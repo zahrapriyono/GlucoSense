@@ -112,11 +112,8 @@
 
   <!-- ── Tab: Saved Articles ─────────────────── -->
   <div id="tab-articles" class="tab-panel hidden">
-    <div class="card text-center" style="padding: 3rem;">
-      <p style="font-size: 2.5rem; margin-bottom: 1rem;">📚</p>
-      <h3 class="mb-2">No saved articles yet</h3>
-      <p class="text-muted mb-4">Browse our knowledge center and save articles for later.</p>
-      <a href="{% url 'knowledge:list' %}" class="btn btn-primary">Browse Articles</a>
+    <div id="savedArticlesContainer">
+      <!-- Saved Articles will be loaded here -->
     </div>
   </div>
 
@@ -461,10 +458,22 @@
   }
   // Tab switching
   function switchTab(name) {
-    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-    document.querySelector(`[data-tab="${name}"]`).classList.add('active');
-    document.getElementById('tab-' + name).classList.remove('hidden');
+    document.querySelectorAll('.profile-tab')
+      .forEach(t => t.classList.remove('active'));
+
+    document.querySelectorAll('.tab-panel')
+      .forEach(p => p.classList.add('hidden'));
+
+    document.querySelector(`[data-tab="${name}"]`)
+      .classList.add('active');
+
+    document.getElementById('tab-' + name)
+      .classList.remove('hidden');
+
+    if (name === 'articles') {
+      loadSavedArticles();
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -518,6 +527,171 @@
     });
   }
 
+  async function loadSavedArticles() {
+    const token = localStorage.getItem('token');
+
+    if(!token) {
+      console.error('Token not found.');
+      return;
+    }
+
+    const container = document.getElementById('savedArticlesContainer');
+
+    if(!container) {
+      console.error('Saved articles container not found.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/saved-articles/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      console.log('Saved articles status:', response.status);
+      console.log('Sved articles response:', result);
+
+      if(!response.ok) {
+        console.error('Failed to load saved articles:', result);
+        return;
+      }
+
+      const savedArticles = result.data || [];
+
+      if(savedArticles.length === 0) {
+        container.innerHTML = `
+          <div class="card text-center" style="padding: 3rem;">
+            <p style="font-size: 2.5rem; margin-bottom: 1rem;">📚</p>
+            <h3 class="mb-2">No saved articles yet</h3>
+            <p class="text-muted mb-4">
+              Browse our knowledge center and save articles for later.
+            </p>
+            <a href="{% url 'knowledge:list' %}" class="btn btn-primary">
+              Browse Articles
+            </a>
+          </div>
+        `;
+
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="card">
+          <h3 class="mb-6">Saved Articles</h3>
+          <div class="grid-2 gap-6">
+            ${savedArticles.map(article => `
+              <div class="card">
+                
+                ${
+                  article.thumbnail_url
+                    ? `
+                      <img
+                        src="${article.thumbnail_url}"
+                        alt="${article.title}"
+                        style="
+                          width: 100%;
+                          height: 180px;
+                          object-fit: cover;
+                          border-radius: 0.75rem;
+                          margin-bottom: 1rem;
+                        "
+                      >
+                    `
+                    : ''
+                }
+                
+                <span class="badge badge-blue">
+                  ${article.category}
+                </span>
+
+                <h4 class="mt-3 mb-2">
+                  ${article.title}
+                </h4>
+
+                <p class="text-sm text-muted">
+                  Saved on ${new Date(article.saved_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </p>
+
+                <button
+                  type="button"
+                  onclick="unsaveArticle(${article.article_id})"
+                  style="
+                    appearance: none;
+                    -webkit-appearance: none;
+                    border: none;
+                    outline: none;
+                    background: transparent;
+                    box-shadow: none;
+                    padding: 0;
+                    margin: 0 20rem 0 0;
+                    color: #1f4396;
+                    font-family: inherit;
+                    font-size: 1rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                  "
+                >
+                  ♥ Unsave
+                </button>
+
+                <span class="text-primary font-semibold text-sm">
+                  Read Article →
+                </span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+    } catch (error) {
+      console.error('Error loading saved articles:', error);
+    }
+  }
+
+  async function unsaveArticle(articleId) {
+    try {
+      const token = localStorage.getItem('token');
+
+      if(!token) {
+        console.error('Token not found.');
+        return;
+      }
+
+      const response = await fetch(`/api/saved-articles/${articleId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      console.log('Unsave article status:', response.status);
+      console.log('Unsave article response:', result);
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || 'Failed to remove saved article.'
+        );
+      }
+
+      console.log('Article unsaved successfully.');
+
+      loadSavedArticles();
+
+    } catch (error) {
+      console.error('Failed to unsave article:', error);
+    }
+  }
+
   document.getElementById('profileForm').addEventListener(
     'submit',
     updateMedicalProfile
@@ -532,6 +706,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     loadMedicalProfile();
     loadAssessmentHistory();
+    loadSavedArticles();
   });
 </script>
 {% endblock %}

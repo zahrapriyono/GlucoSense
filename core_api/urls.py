@@ -6,6 +6,10 @@ urlpatterns = [
     path('articles/', views.get_article_list, name='get_article_list'),
     path('articles/<int:article_id>/', views.get_article_detail, name='get_article_detail'),
 
+    path('saved-articles/', views.saved_article_api, name='saved_article_api'),
+
+    path('saved-articles/<int:article_id>/', views.delete_saved_article_api, name='delete_saved_article_api'),
+
     path('doctors/', views.get_doctor_list, name='get_doctor_list'),
     path('doctors/<int:doctor_id>/', views.get_doctor_detail, name='get_doctor_detail'),
 
