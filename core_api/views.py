@@ -5,6 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required
 from assessment.ml.predictor import predict_risk
 from datetime import datetime
+from django.db.models import Q
 from .auth import (generate_token, jwt_required)
 from .utils import (
     parse_json_body,
@@ -196,14 +197,32 @@ def saved_article_api(request):
 # ========================
 
 def get_doctor_list(request):
+    search = request.GET.get('search')
     city_filter = request.GET.get('city')
+    specialization_filter = request.GET.get('specialization')
     experience_filter = request.GET.get('experience')
-    
+    top_rated = request.GET.get('top_rated')
+    insurance_filter = request.GET.get('insurance')
+    availability_filter = request.GET.get('availability')
+
     doctors = Doctor.objects.all().order_by('createdAt')
-    
+
+    if search:
+        doctors = doctors.filter(
+            Q(fullName__icontains=search) |
+            Q(specialization__icontains=search)
+        )
+
     if city_filter:
-        doctors = doctors.filter(city__iexact=city_filter)
-        
+        doctors = doctors.filter(
+            city__icontains=city_filter
+        )
+
+    if specialization_filter:
+        doctors = doctors.filter(
+            specialization__iexact=specialization_filter
+        )  
+    
     if experience_filter:
         try:
             experience_filter = int(experience_filter)
@@ -216,7 +235,20 @@ def get_doctor_list(request):
         doctors = doctors.filter(
             experienceYears__gte=experience_filter
         )
-            
+
+    if top_rated == 'true':
+        doctors = doctors.order_by('-rating')
+
+    if insurance_filter == 'true':
+        doctors = doctors.filter(insurance__icontains='accept')
+
+    if availability_filter == 'true':
+        doctors = doctors.exclude(
+            availability__isnull=True
+        ).exclude(
+            availability__exact=''
+        )
+    
     data = []
 
     for doctor in doctors:
@@ -226,7 +258,13 @@ def get_doctor_list(request):
             'specialization': doctor.specialization,
             'city': doctor.city,
             'experienceYears': doctor.experienceYears,
+            'description': doctor.description,
             'profilePictureUrl': doctor.profilePictureUrl,
+            'hospital': doctor.hospital,
+            'availability': doctor.availability,
+            'insurance': doctor.insurance,
+            'rating': float(doctor.rating),
+            'reviewCount': doctor.reviewCount,
             'createdAt': doctor.createdAt.strftime('%Y-%m-%d %H:%M:%S')
         })
         

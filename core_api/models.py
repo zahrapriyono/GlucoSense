@@ -53,6 +53,11 @@ class Doctor(models.Model):
     experienceYears = models.IntegerField(db_column='experienceYears')
     description = models.TextField(db_column='description', blank=True, null=True)
     profilePictureUrl = models.URLField(max_length=500, blank=True, null=True)
+    hospital = models.CharField(max_length=255, db_column='hospital', blank=True, null=True)
+    availability = models.CharField(max_length=255, db_column='availability', blank=True, null=True)
+    insurance = models.CharField(max_length=255, db_column='insurance', blank=True, null=True)
+    rating = models.DecimalField(max_digits=2, decimal_places=1, default=0)
+    reviewCount = models.IntegerField(db_column='reviewCount', default=0)
     createdAt = models.DateTimeField(auto_now_add=True, db_column='createdAt')
 
     class Meta:

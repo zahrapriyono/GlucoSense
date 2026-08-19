@@ -26,8 +26,15 @@
     <div class="doctors-search">
       <div class="doctors-search__field">
         <span class="doctors-search__icon">🔍</span>
-        <input class="doctors-search__input" type="text" id="searchName"
-               placeholder="Search by name or condition...">
+        <input 
+          class="doctors-search__input" 
+          type="text" 
+          id="searchName"
+          placeholder="Search by name or condition..."
+          autocomplete="off"
+        >
+
+        <div id="doctorSuggestions" class="doctor-suggestions"></div>
       </div>
       <div class="doctors-search__divider"></div>
       <div class="doctors-search__field">
@@ -45,35 +52,48 @@
           <option value="nutritionist">Nutritionist</option>
         </select>
       </div>
-      <button class="btn btn-primary" style="border-radius: var(--radius-full); padding: 0.75rem 1.75rem;">
+      <button 
+        id="doctorSearchBtn"
+        class="btn btn-primary" 
+        style="border-radius: var(--radius-full); padding: 0.75rem 1.75rem;"
+      >
         Search
       </button>
     </div>
 
     <!-- Filter Chips -->
     <div class="doctors-filters mt-4">
-      <button class="filter-chip">Specialty ▾</button>
-      <button class="filter-chip filter-chip--active">Availability: This Week ✓</button>
-      <button class="filter-chip">Top Rated</button>
-      <button class="filter-chip">Accepts Insurance</button>
+      <button class="filter-chip" id="availabilityFilter">
+        Availability: This Week
+      </button>
+      <button class="filter-chip" id="topRatedFilter">
+        Top Rated
+      </button>
+      <button class="filter-chip" id="insuranceFilter">
+        Accepts Insurance
+      </button>
     </div>
 
     <!-- Doctor Cards Grid -->
     <div class="grid-3 mt-8" id="doctorGrid">
       {% for doctor in doctors %}
-      <div class="doctor-card card" data-specialty="{{ doctor.specialty|lower }}">
+      <div 
+        class="doctor-card card" 
+        data-specialty="{{ doctor.specialization|lower }}"
+        data-city="{{ doctor.city|lower }}"
+      >
 
         <!-- Header: photo + rating + name -->
         <div class="doctor-card__header">
-          <img src="{{ doctor.photo }}" alt="{{ doctor.name }}" class="doctor-photo">
+          <img src="{{ doctor.profilePictureUrl }}" alt="{{ doctor.fullName }}" class="doctor-photo">
           <div class="doctor-card__info-top">
             <div class="doctor-rating">
               <span class="star-icon">★</span>
               <strong>{{ doctor.rating }}</strong>
-              <span class="text-muted text-xs">({{ doctor.reviews }} reviews)</span>
+              <span class="text-muted text-xs">({{ doctor.reviewCount }} reviews)</span>
             </div>
-            <h3 class="doctor-name">{{ doctor.name }}</h3>
-            <span class="badge badge-blue">{{ doctor.specialty }}</span>
+            <h3 class="doctor-name">{{ doctor.fullName }}</h3>
+            <span class="badge badge-blue">{{ doctor.specialization }}</span>
           </div>
         </div>
 
@@ -99,10 +119,274 @@
       <button class="btn btn-outline" style="border-radius: var(--radius-full); padding: 0.6rem 2rem;">
         Load More Specialists
       </button>
-      <p class="text-muted text-xs mt-2">Showing {{ doctors|length }} of {{ total }} specialists in your area.</p>
+      <p id="doctorCount" class="text-muted text-xs mt-2">Showing {{ doctors|length }} of {{ total }} specialists in your area.</p>
     </div>
 
   </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  async function loadDoctors() {
+    try {
+      const response = await fetch('/api/doctors/');
+
+      const result = await response.json();
+
+      console.log('Doctors status:', response.status);
+      console.log('Doctors response:', result);
+
+      if (!response.ok) {
+        console.error('Failed to load doctors:', result);
+        return;
+      }
+
+      const doctors = result.data || [];
+
+      renderDoctors(doctors);
+
+    } catch (error) {
+      console.error('Error loading doctors:', error);
+    }
+  }
+
+  function renderDoctors(doctors) {
+    const doctorGrid = document.getElementById('doctorGrid');
+
+    doctorGrid.innerHTML = '';
+
+    if (doctors.length === 0) {
+      doctorGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+          <h3>No doctors found</h3>
+          <p class="text-muted">
+            Try changing your search or filter.
+          </p>
+        </div>
+      `;
+
+      return;
+    }
+
+    doctors.forEach(doctor => {
+      doctorGrid.innerHTML += `
+        <div class="doctor-card card">
+
+          <div class="doctor-card__header">
+
+            <img
+              src="${doctor.profilePictureUrl || '/static/images/default-doctor.png'}"
+              alt="${doctor.fullName}"
+              class="doctor-photo"
+            >
+
+            <div class="doctor-card__info-top">
+
+              <h3 class="doctor-name">
+                ${doctor.fullName}
+              </h3>
+
+              <span class="badge badge-blue">
+                ${doctor.specialization}
+              </span>
+
+            </div>
+
+          </div>
+
+          <ul class="doctor-details">
+
+            <li>
+              <span class="detail-icon">📍</span>
+              ${doctor.city}
+            </li>
+
+            <li>
+              <span class="detail-icon">💼</span>
+              ${doctor.experienceYears} years experience
+            </li>
+
+          </ul>
+
+          <div class="doctor-card__actions">
+
+            <button
+              class="btn btn-primary"
+              style="flex: 1;"
+            >
+              Book Appointment
+            </button>
+
+            <button
+              class="btn btn-outline doctor-msg-btn"
+              title="Send message"
+            >
+              💬
+            </button>
+
+          </div>
+
+        </div>
+      `;
+    });
+  }
+
+  async function searchDoctors() {
+    const search = document.getElementById('searchName').value.trim();
+    const city = document.getElementById('searchLocation').value.trim();
+    const specialization = document.getElementById('searchSpecialty').value;
+
+    const params = new URLSearchParams();
+
+    if(search){
+      params.append('search', search);
+    }
+
+    if(city){
+      params.append('city', city);
+    }
+
+    if(specialization){
+      params.append('specialization', specialization);
+    }
+
+    try {
+      const response = await fetch(`/api/doctors/?${params.toString()}`);
+
+      const result = await response.json();
+
+      console.log('Doctor API status:', response.status);
+      console.log('Doctor API response:', result);
+      
+      if(!response.ok){
+        console.error('Failed to load doctors:', result);
+        return;
+      }
+
+      renderDoctors(result.data);
+
+    } catch (error) {
+      console.error('Error loading doctors:', error);
+    }
+  }
+
+  async function filterTopRated() {
+    try {
+      const response = await fetch('/api/doctors/?top_rated=true');
+
+      const result = await response.json();
+
+      console.log('Top Rated status:', response.status);
+      console.log('Top Rated response:', result);
+
+      if (!response.ok) {
+        console.error('Failed to load top rated doctors:', result);
+        return;
+      }
+
+      renderDoctors(result.data);
+
+      document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.remove('filter-chip--active');
+      });
+
+      document.getElementById('topRatedFilter')
+        .classList.add('filter-chip--active');
+
+    } catch (error) {
+      console.error('Error loading top rated doctors:', error);
+    }
+  }
+
+  async function filterInsurance() {
+    try {
+      const response = await fetch('/api/doctors/?insurance=true');
+
+      const result = await response.json();
+
+      console.log('Insurance status:', response.status);
+      console.log('Insurance response:', result);
+
+      if (!response.ok) {
+        console.error('Failed to load insurance doctors:', result);
+        return;
+      }
+
+      renderDoctors(result.data);
+
+      // Pindahkan active state ke Accepts Insurance
+      document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.remove('filter-chip--active');
+      });
+
+      document.getElementById('insuranceFilter')
+        .classList.add('filter-chip--active');
+
+    } catch (error) {
+      console.error('Error loading insurance doctors:', error);
+    }
+  }
+
+  async function filterAvailability() {
+    try {
+      const response = await fetch(
+        '/api/doctors/?availability=true'
+      );
+
+      const result = await response.json();
+
+      console.log(
+        'Availability status:',
+        response.status
+      );
+
+      console.log(
+        'Availability response:',
+        result
+      );
+
+      if (!response.ok) {
+        console.error(
+          'Failed to load available doctors:',
+          result
+        );
+        return;
+      }
+
+      renderDoctors(result.data);
+
+      // Pindahkan active state
+      document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.remove('filter-chip--active');
+      });
+
+      document.getElementById('availabilityFilter')
+        .classList.add('filter-chip--active');
+
+    } catch (error) {
+      console.error(
+        'Error loading available doctors:',
+        error
+      );
+    }
+  }
+
+  document.getElementById('doctorSearchBtn')
+    .addEventListener('click', searchDoctors);
+  
+  document.getElementById('topRatedFilter')
+    .addEventListener('click', filterTopRated);
+
+  document.getElementById('insuranceFilter')
+    .addEventListener('click', filterInsurance);
+  
+  document.getElementById('availabilityFilter')
+    .addEventListener('click', filterAvailability);
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDoctors();
+  });
+</script>
 {% endblock %}
