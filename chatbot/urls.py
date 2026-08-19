@@ -5,5 +5,4 @@ app_name = 'chatbot'
 
 urlpatterns = [
     path('', views.chat, name='chat'),
-    path('api/chat/', views.api_chat, name='api_chat'),
 ]

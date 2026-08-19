@@ -3,26 +3,53 @@ const chatInput = document.getElementById('chatInput');
 
 async function sendMessage() {
     const message = chatInput.value.trim();
+
     if (!message) return;
 
     appendBubble(message, 'user');
     chatInput.value = '';
+
     document.getElementById('chatSuggestions').style.display = 'none';
 
     const loadingId = `loading-${Date.now()}`;
     appendBubble('...', 'bot', loadingId);
 
     try {
-        const response = await fetch('/chatbot/api/chat/', {
+        const token = localStorage.getItem('token');
+
+        const response = await fetch('/api/chat/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                user_message: message 
+            })
         });
         const data = await response.json();
+
+        console.log('Chat status:', response.status);
+        console.log('Chat response:', data);
+
         document.getElementById(loadingId)?.remove();
-        appendBubble(data.answer, 'bot');
-    } catch {
+
+        if (!response.ok) {
+            throw new Error(
+                data.error || 'Failed to get AI response.'
+            );
+        }
+
+        appendBubble(
+            data.data.ai_response,
+            'bot'
+        );
+
+    } catch (error) {
+        console.error('Chat error:', error);
+
         document.getElementById(loadingId)?.remove();
+
         appendBubble('Sorry, something went wrong. Please try again.', 'bot');
     }
 
@@ -53,36 +80,87 @@ function appendBubble(text, type, id = null) {
  * - Grays out (Source X) citations
  */
 function formatBotResponse(text) {
-    // Remove trailing/leading whitespace
-    text = text.trim();
+    // Escape HTML terlebih dahulu agar response AI aman
+    const escapeHtml = (value) => {
+        return value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    };
 
-    // Gray out source citations like "(Source 3 and 4)" or "(Source 5)"
-    text = text.replace(/\(Source[^)]+\)/g, match =>
-        `<span style="color:#94A3B8; font-size:0.78rem;">${match}</span>`
+    text = escapeHtml(text.trim());
+
+    // Bold Markdown: **text** -> <strong>text</strong>
+    text = text.replace(
+        /\*\*(.*?)\*\*/g,
+        '<strong>$1</strong>'
     );
 
-    // Split on " * " to detect bullet list
-    const parts = text.split(/ \* /);
+    // Source citation
+    text = text.replace(
+        /\(Source[^)]+\)/g,
+        '<span class="chat-source">$&</span>'
+    );
 
-    if (parts.length <= 1) {
-        // No bullets — just a paragraph
-        return `<p style="margin:0; line-height:1.7;">${text}</p>`;
-    }
+    // Pecah response berdasarkan baris
+    const lines = text.split(/\r?\n/);
 
-    // First part = intro sentence, rest = bullet items
-    const intro = parts[0];
-    const bullets = parts.slice(1).filter(b => b.trim());
+    let html = '';
+    let listItems = [];
 
-    const listItems = bullets
-        .map(b => `<li style="margin-bottom:0.4rem; line-height:1.6;">${b.trim()}</li>`)
-        .join('');
+    const flushList = () => {
+        if (listItems.length === 0) return;
 
-    return `
-        ${intro ? `<p style="margin:0 0 0.75rem 0; line-height:1.7;">${intro}</p>` : ''}
-        <ul style="margin:0; padding-left:1.25rem; color:#334155;">
-            ${listItems}
-        </ul>
-    `;
+        html += `
+            <ul>
+                ${listItems
+                    .map(item => `<li>${item}</li>`)
+                    .join('')}
+            </ul>
+        `;
+
+        listItems = [];
+    };
+
+    lines.forEach(line => {
+        const trimmed = line.trim();
+
+        // Baris kosong = paragraph spacing
+        if (!trimmed) {
+            flushList();
+            return;
+        }
+
+        // Bullet Markdown:
+        // - item
+        // * item
+        if (/^[-*]\s+/.test(trimmed)) {
+            const item = trimmed.replace(/^[-*]\s+/, '');
+            listItems.push(item);
+            return;
+        }
+
+        // Kalau bukan bullet, tutup list sebelumnya
+        flushList();
+
+        // Heading sederhana
+        if (/^#{1,3}\s+/.test(trimmed)) {
+            const heading = trimmed.replace(/^#{1,3}\s+/, '');
+
+            html += `<h3>${heading}</h3>`;
+            return;
+        }
+
+        // Paragraph
+        html += `<p>${trimmed}</p>`;
+    });
+
+    // Pastikan list terakhir ikut dimasukkan
+    flushList();
+
+    return html;
 }
 
 function sendSuggestion(text) {

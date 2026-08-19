@@ -276,6 +276,52 @@
 }
 
 /* -----------------------------------------------
+   BOT MESSAGE CONTENT
+   ----------------------------------------------- */
+
+.chat-bubble--bot p {
+    margin: 0 0 12px;
+}
+
+.chat-bubble--bot p:last-child {
+    margin-bottom: 0;
+}
+
+.chat-bubble--bot strong {
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.chat-bubble--bot ul,
+.chat-bubble--bot ol {
+    margin: 8px 0 14px;
+    padding-left: 22px;
+}
+
+.chat-bubble--bot li {
+    margin-bottom: 8px;
+}
+
+.chat-bubble--bot li:last-child {
+    margin-bottom: 0;
+}
+
+.chat-bubble--bot h1,
+.chat-bubble--bot h2,
+.chat-bubble--bot h3 {
+    margin: 14px 0 8px;
+    line-height: 1.4;
+    color: var(--color-text);
+}
+
+.chat-bubble--bot code {
+    background: var(--color-bg);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 0.9em;
+}
+
+/* -----------------------------------------------
    RESPONSIVE
    ----------------------------------------------- */
 @media (max-width: 768px) {

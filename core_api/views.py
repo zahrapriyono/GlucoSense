@@ -1161,7 +1161,9 @@ def send_chat(request):
         )
 
     user_message = body.get("user_message")
-    ai_response = get_response(user_message)
+
+    result = get_response(user_message)
+    ai_response = result["answer"]
 
     medical_profile = get_medical_profile(request.user)
 

@@ -143,7 +143,7 @@ def call_llm(system_prompt: str, user_prompt: str) -> str:
                     "content": user_prompt,
                 }
             ],
-            model="llama-3.3-70b-versatile", 
+            model="openai/gpt-oss-120b", 
             temperature=0.2, # Dibuat rendah (0.2) agar lebih faktual sesuai konteks RAG
         )
         

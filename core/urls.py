@@ -27,5 +27,5 @@ urlpatterns = [
     path('profile/', include('dashboard.urls')),
     path('auth/', include('accounts.urls')),
     
-    path("api/", include("core_api.urls")),
+    path('api/', include('core_api.urls')),
 ]
