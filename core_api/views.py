@@ -1121,7 +1121,7 @@ def get_chat_history(request):
 
     chat_histories = ChatHistory.objects.filter(
         medicalProfile=medical_profile
-    ).order_by("createdAt")
+    ).order_by("-createdAt")
 
     data = []
 

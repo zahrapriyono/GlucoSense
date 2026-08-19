@@ -1,5 +1,7 @@
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
+const chatHistory = document.getElementById('chatHistory');
+const newChatBtn = document.getElementById('newChatBtn');
 
 async function sendMessage() {
     const message = chatInput.value.trim();
@@ -163,6 +165,69 @@ function formatBotResponse(text) {
     return html;
 }
 
+function renderChatHistory(histories){
+    chatHistory.innerHTML = '';
+
+    if(!histories || histories.length === 0){
+        return;
+    }
+
+    histories.forEach(chat => {
+        const li = document.createElement('li');
+
+        li.textContent = chat.user_message;
+
+        li.dataset.chatId = chat.id;
+
+        chatHistory.appendChild(li);
+    });
+}
+
+async function loadChatHistory() {
+    try {
+        const token = localStorage.getItem('token');
+
+        const response = await fetch('/api/chat-history/', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const result = await response.json();
+
+        console.log('Chat history status:', response.status);
+        console.log('Chat history response:', result);
+
+        if(!response.ok){
+            throw new Error(
+                result.error || 'Failed to load chat history.'
+            );
+        }
+
+        renderChatHistory(result.data);
+
+    } catch (error) {
+        console.error('Chat history error:', error);
+    }
+}
+
+function startNewChat() {
+    chatMessages.innerHTML = `
+        <div class="chat-bubble chat-bubble--bot">
+            Hello! I'm your GlucoSense AI assistant. How can I help you understand your metabolic health or diabetes risk today?
+        </div>
+    `;
+
+    chatInput.value = '';
+
+    document.getElementById('chatSuggestions').style.display = 'flex';
+
+    chatInput.focus();
+
+    chatMessages.scrollTop = 0;
+}
+
 function sendSuggestion(text) {
     chatInput.value = text;
     sendMessage()
@@ -173,4 +238,10 @@ chatInput.addEventListener(`keydown`, e => {
         e.preventDefault();
         sendMessage();
     }
+});
+
+newChatBtn.addEventListener('click', startNewChat);
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadChatHistory();
 });

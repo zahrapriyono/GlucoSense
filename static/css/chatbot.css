@@ -68,6 +68,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     transition: var(--ease);
+    flex-shrink: 0;
 }
 .chat-history li:hover { background: var(--color-bg); color: var(--color-text); }
 .chat-history li.active { background: var(--color-primary-light); color: var(--color-primary); font-weight: 500; }
