@@ -79,7 +79,7 @@
 
           <div class="snapshot-stat">
             <p class="snapshot-stat__label">SAVED RESOURCES</p>
-            <p class="snapshot-stat__value text-green" id="savedResources">0</p>
+            <strong id="savedResourcesCount">0</strong>
             <p class="snapshot-stat__sub">insights saved</p>
           </div>
 
@@ -195,11 +195,26 @@
           <button type="button" class="btn btn-ghost ml-2" id="cancelProfileBtn">
             Cancel
           </button>
+
+          <!-- Logout -->
+           <div class="profile-account card">
+            <div class="profile-account__content">
+              <h3>Account</h3>
+              <p>Sign out from your GlucoSense account.</p>
+            </div>
+
+            <button
+              type="button"
+              id="logoutBtn"
+              class="btn btn-danger"
+            >
+              Log Out
+            </button>
+          </div>
         </div>
       </form>
     </div>
   </div>
-
 </section>
 {% endblock %}
 
@@ -692,10 +707,50 @@
     }
   }
 
+  async function loadSavedResources() {
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await fetch('/api/saved-articles/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      console.log('Saved resources:', result);
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || 'Failed to load saved resources.'
+        );
+      }
+
+      const savedResourcesCount = document.getElementById(
+        'savedResourcesCount'
+      );
+
+      savedResourcesCount.textContent = result.data.length;
+
+    } catch (error) {
+      console.error('Failed to load saved resources:', error);
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('token');
+
+    window.location.href = "{% url 'accounts:login' %}";
+  }
+
   document.getElementById('profileForm').addEventListener(
     'submit',
     updateMedicalProfile
   );
+
+  document.getElementById('logoutBtn').addEventListener('click', logout);
 
   document.getElementById('cancelProfileBtn').addEventListener('click', async function () {
     await loadMedicalProfile();
@@ -707,6 +762,7 @@
     loadMedicalProfile();
     loadAssessmentHistory();
     loadSavedArticles();
+    loadSavedResources();
   });
 </script>
 {% endblock %}
