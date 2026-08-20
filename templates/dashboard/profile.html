@@ -51,9 +51,17 @@
               <h3>Risk Trend</h3>
               <p class="text-sm text-muted">Risk scores over the last 6 months</p>
             </div>
-            <span class="badge badge-green" style="font-size:0.8rem; padding:0.35rem 0.9rem;">📈 Improving</span>
+            <span
+              id="riskTrendBadge"
+              class="badge"
+              style="font-size:0.8rem; padding:0.35rem 0.9rem;"
+            >
+              📊 Loading...
+            </span>
           </div>
-          <canvas id="riskChart" height="100"></canvas>
+          <div class="risk-chart-container">
+            <canvas id="riskChart"></canvas>
+          </div>
         </div>
 
         <!-- Recent Assessments -->
@@ -335,9 +343,9 @@
 
       const assessments = result.data;
 
-      console.log('FIRST ASSESSMENT:', assessments[0]);
-      console.log('CREATED AT:', assessments[0]?.createdAt);
-      console.log('AVAILABLE KEYS:', Object.keys(assessments[0]));
+      renderRiskChart(assessments);
+
+      updateRiskTrendBadge(assessments);
 
       const historyContainer = document.getElementById('assessmentHistory');
 
@@ -422,6 +430,57 @@
     }
   }
 
+  function updateRiskTrendBadge(assessments) {
+    const badge = document.getElementById('riskTrendBadge');
+
+    if (!badge) return;
+
+    if (!assessments || assessments.length < 2) {
+      badge.textContent = '📊 No trend yet';
+      badge.className = 'badge';
+      return;
+    }
+
+    // Urutkan dari assessment paling lama → terbaru
+    const sortedAssessments = [...assessments].sort(
+      (a, b) =>
+        new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    const latest = sortedAssessments[sortedAssessments.length - 1];
+    const previous = sortedAssessments[sortedAssessments.length - 2];
+
+    const latestRisk = parseFloat(
+      String(latest.probability).replace('%', '')
+    );
+
+    const previousRisk = parseFloat(
+      String(previous.probability).replace('%', '')
+    );
+
+    if (
+      !Number.isFinite(latestRisk) ||
+      !Number.isFinite(previousRisk)
+    ) {
+      badge.textContent = '📊 No trend yet';
+      badge.className = 'badge';
+      return;
+    }
+
+    if (latestRisk < previousRisk) {
+      badge.textContent = '📈 Improving';
+      badge.className = 'badge badge-green';
+
+    } else if (latestRisk > previousRisk) {
+      badge.textContent = '📈 Increasing';
+      badge.className = 'badge badge-red';
+
+    } else {
+      badge.textContent = '➡️ Stable';
+      badge.className = 'badge badge-yellow';
+    }
+  }
+
   async function updateMedicalProfile(event) {
     event.preventDefault();
 
@@ -501,45 +560,137 @@
     });
   });
 
-  // Risk Trend Chart
-  const ctx = document.getElementById('riskChart');
-  if (ctx) {
-    new Chart(ctx, {
+  function renderRiskChart(assessments) {
+    const ctx = document.getElementById('riskChart');
+
+    if (!ctx) {
+      console.error('Risk chart canvas not found.');
+      return;
+    }
+
+    // Hapus chart sebelumnya
+    if (window.riskChartInstance) {
+      window.riskChartInstance.destroy();
+    }
+
+    if (!assessments || assessments.length === 0) {
+      console.log('No assessment data for risk chart.');
+      return;
+    }
+
+    // Urutkan assessment dari yang paling lama -> terbaru
+    const sortedAssessments = [...assessments].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    const labels = sortedAssessments.map(
+      assessment => formatAssessmentDate(assessment.created_at)
+    );
+
+    const riskScores = sortedAssessments.map(assessment =>
+      parseFloat(
+        String(assessment.probability).replace('%', '')
+      )
+    );
+
+    console.log('Chart labels:', labels);
+    console.log('Chart data:', riskScores);
+
+    window.riskChartInstance = new Chart(ctx, {
       type: 'line',
+
       data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Today'],
-        datasets: [{
-          label: 'Risk Score',
-          data: [65, 58, 62, 55, 50, 45],
-          borderColor: '#1B3A8A',
-          backgroundColor: 'rgba(27,58,138,0.07)',
-          tension: 0.45,
-          fill: true,
-          pointBackgroundColor: '#1B3A8A',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-        }]
+        labels: labels,
+
+        datasets: [
+          {
+            label: 'Risk Probability',
+            data: riskScores,
+            // LINE
+            borderColor: '#1B3A8A',
+            borderWidth: 3,
+            // AREA
+            backgroundColor: 'rgba(27, 58, 138, 0.08)',
+            fill: true,
+            // CURVE
+            tension: 0.35,
+            // POINT
+            pointRadius: 7,
+            pointHoverRadius: 9,
+            pointBackgroundColor: '#1B3A8A',
+            pointBorderColor: '#FFFFFF',
+            pointBorderWidth: 3,
+            // Pastikan line tidak disembunyikan
+            showLine: true,
+            // Pastikan gap tidak membuat line hilang
+            spanGaps: true
+          }
+        ]
       },
+
       options: {
         responsive: true,
-        animation: { duration: 1200, easing: 'easeOutCubic' },
-        plugins: { legend: { display: false } },
+
+        maintainAspectRatio: false,
+
+        animation: false,
+
+        plugins: {
+          legend: {
+            display: false
+          },
+
+          tooltip: {
+            enabled: true,
+
+            callbacks: {
+              label: function(context) {
+                return `Risk Probability: ${context.parsed.y}%`;
+              }
+            }
+          }
+        },
+
         scales: {
           y: {
-            display: true,
-            min: 0, max: 100,
-            grid: { color: 'rgba(0,0,0,0.04)' },
-            ticks: { color: '#94A3B8', font: { size: 11 } }
+            min: 0,
+            max: 100,
+
+            title: {
+              display: true,
+              text: 'Risk Probability (%)'
+            },
+
+            ticks: {
+              callback: function(value) {
+                return value + '%';
+              },
+
+              color: '#94A3B8'
+            },
+
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
           },
+
           x: {
-            grid: { display: false },
-            ticks: { color: '#94A3B8', font: { size: 11 } }
+            ticks: {
+              color: '#94A3B8'
+            },
+
+            grid: {
+              display: false
+            }
           }
         }
       }
     });
+
+    console.log(
+      'Chart instance:',
+      window.riskChartInstance
+    );
   }
 
   async function loadSavedArticles() {
