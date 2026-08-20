@@ -1,0 +1,325 @@
+/* ================================================
+   GlucoSense — Sign Up Page
+   ================================================ */
+
+/* ── Page ───────────────────────────────────── */
+
+.signup-page {
+    min-height: calc(100vh - var(--nav-height));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding: 3rem 1.5rem;
+
+    background: var(--color-bg);
+}
+
+
+/* ── Card ───────────────────────────────────── */
+
+.signup-card {
+    width: 100%;
+    max-width: 560px;
+
+    background: var(--color-white);
+
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+
+    padding: 2.5rem 3rem;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.06),
+        0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+
+/* ── Header ─────────────────────────────────── */
+
+.signup-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.signup-header h1 {
+    margin: 0 0 0.5rem;
+
+    font-size: 1.75rem;
+    line-height: 1.3;
+    font-weight: 800;
+
+    color: var(--color-text);
+}
+
+.signup-header p {
+    margin: 0;
+
+    font-size: 0.95rem;
+    line-height: 1.5;
+
+    color: var(--color-text-secondary);
+}
+
+
+/* ── Form ───────────────────────────────────── */
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+
+/* ── Form Group ─────────────────────────────── */
+
+.signup-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+
+/* ── Label ──────────────────────────────────── */
+
+.signup-form .form-label {
+    display: block;
+
+    margin: 0;
+
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    color: var(--color-text);
+}
+
+
+/* ── Inputs ─────────────────────────────────── */
+
+.signup-form input,
+.signup-form select,
+.signup-form .form-control {
+    width: 100%;
+    height: 46px;
+
+    box-sizing: border-box;
+
+    padding: 0.7rem 0.9rem;
+
+    border: 1px solid #d5d9e2;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: var(--color-text);
+
+    font-family: inherit;
+    font-size: 0.9rem;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+
+/* Placeholder */
+
+.signup-form input::placeholder {
+    color: #9ca3af;
+}
+
+
+/* ── Focus ──────────────────────────────────── */
+
+.signup-form input:focus,
+.signup-form select:focus,
+.signup-form .form-control:focus {
+    border-color: var(--color-primary);
+
+    background: #ffffff;
+
+    box-shadow: 0 0 0 3px rgba(27, 58, 138, 0.1);
+}
+
+
+/* ── Select ─────────────────────────────────── */
+
+.signup-form select {
+    cursor: pointer;
+
+    appearance: auto;
+}
+
+
+/* ── Submit Button ──────────────────────────── */
+
+.signup-submit {
+    width: 100%;
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 0.5rem;
+    padding: 0.7rem 1rem;
+
+    border: none;
+    border-radius: 10px;
+
+    background: var(--color-primary);
+    background-color: #2154cc;
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+}
+
+
+/* Hover */
+
+.signup-submit:hover {
+    background: #163275;
+
+    box-shadow: 0 5px 14px rgba(27, 58, 138, 0.2);
+
+    transform: translateY(-1px);
+}
+
+
+/* Active */
+
+.signup-submit:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+
+/* ── Error / Success Message ───────────────── */
+
+.signup-message,
+.form-message {
+    padding: 0.75rem 1rem;
+
+    margin-bottom: 0.5rem;
+
+    border-radius: 10px;
+
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+
+/* Error */
+
+.signup-message.error,
+.form-message--error {
+    display: block;
+
+    background: #fef2f2;
+    color: #dc2626;
+
+    border: 1px solid #fecaca;
+}
+
+
+/* Success */
+
+.signup-message.success,
+.form-message--success {
+    display: block;
+
+    background: #f0fdf4;
+    color: #16a34a;
+
+    border: 1px solid #bbf7d0;
+}
+
+
+/* ── Login Link ─────────────────────────────── */
+
+.signup-login {
+    margin-top: 1.5rem;
+
+    text-align: center;
+
+    font-size: 0.9rem;
+
+    color: var(--color-text-secondary);
+}
+
+.signup-login a {
+    color: var(--color-primary);
+
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+.signup-login a:hover {
+    color: #163275;
+
+    text-decoration: underline;
+}
+
+
+/* ── Required / Validation ─────────────────── */
+
+.signup-form input:invalid:not(:placeholder-shown),
+.signup-form select:invalid {
+    border-color: #fca5a5;
+}
+
+.signup-form input:valid:not(:placeholder-shown) {
+    border-color: #86efac;
+}
+
+
+/* ── Responsive ────────────────────────────── */
+
+@media (max-width: 600px) {
+
+    .signup-page {
+        min-height: auto;
+
+        padding: 2rem 1rem;
+
+        align-items: flex-start;
+    }
+
+    .signup-card {
+        max-width: 100%;
+
+        padding: 2rem 1.5rem;
+
+        border-radius: 16px;
+    }
+
+    .signup-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .signup-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .signup-header p {
+        font-size: 0.875rem;
+    }
+
+    .signup-form {
+        gap: 1rem;
+    }
+}
