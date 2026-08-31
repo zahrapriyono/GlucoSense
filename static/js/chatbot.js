@@ -19,14 +19,14 @@ async function sendMessage() {
     try {
         const token = localStorage.getItem('token');
 
-        const response = await fetch('/api/chat/', {
+        const response = await fetch('/chatbot/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                user_message: message 
+                message: message 
             })
         });
         const data = await response.json();
@@ -43,7 +43,7 @@ async function sendMessage() {
         }
 
         appendBubble(
-            data.data.ai_response,
+            data.answer,
             'bot'
         );
 
