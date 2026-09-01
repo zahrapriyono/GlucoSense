@@ -26,7 +26,7 @@ _COLLECTION_NAME = 'glucosense_kb'
 _TOP_K = 5  # Jumlah dokumen yang di-retrieve per pertanyaan
 
 # --- Load components sekali saat import ---
-_embedder = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+_embedder = None   # lazy — load saat pertama kali dipakai
 _collection = None
 
 def _init():
