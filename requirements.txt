@@ -3,6 +3,7 @@ django-cors-headers==4.9.0
 python-dotenv==1.2.2
 psycopg2-binary==2.9.12
 PyJWT==2.10.1
+dj-database-url==2.3.0
 
 requests
 numpy
