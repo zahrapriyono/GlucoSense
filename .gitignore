@@ -226,3 +226,13 @@ venv/
 
 # Environment variables (berisi API key!)
 .env
+
+# AI Service
+ai_service/.venv/
+ai_service/data/chroma_db/
+ai_service/.env
+
+# Django
+venv/
+.env
+db.sqlite3
